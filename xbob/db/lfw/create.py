@@ -168,7 +168,7 @@ def create(args):
 
   # the real work...
   create_tables(args)
-  s = session(args.type, args.files[0], echo=(args.verbose >= 2)) 
+  s = session_try_nolock(args.type, args.files[0], echo=(args.verbose >= 2)) 
   add_files(s, args.basedir)
   add_people(s, args.basedir)
   add_pairs(s, args.basedir)
