@@ -28,7 +28,7 @@ class LfwDatabaseTest(unittest.TestCase):
 
   # expected numbers of clients
   expected_clients = {
-      'view1': (4038, 1711, 0), 
+      'view1': (4038, 1711, 0),
       'fold1': (3959, 1189, 601),
       'fold2': (3984, 1210, 555),
       'fold3': (4041, 1156, 552),
@@ -42,7 +42,7 @@ class LfwDatabaseTest(unittest.TestCase):
     }
 
   expected_models = {
-      'view1': (3443, 853, 0), 
+      'view1': (3443, 853, 0),
       'fold1': (5345, 916, 472),
       'fold2': (5333, 930, 462),
       'fold3': (5381, 934, 440),
@@ -55,8 +55,22 @@ class LfwDatabaseTest(unittest.TestCase):
       'fold10': (5367, 920, 458)
     }
 
-  expected_restricted_training_images = { 
-      'view1': 3443, 
+  expected_probes = {
+      'view1': (863, 0),
+      'fold1': (931, 473),
+      'fold2': (947, 454),
+      'fold3': (927, 439),
+      'fold4': (893, 451),
+      'fold5': (890, 449),
+      'fold6': (900, 450),
+      'fold7': (899, 467),
+      'fold8': (917, 462),
+      'fold9': (929, 457),
+      'fold10': (919, 474)
+    }
+
+  expected_restricted_training_images = {
+      'view1': 3443,
       'fold1': 2267,
       'fold2': 2228,
       'fold3': 2234,
@@ -68,108 +82,105 @@ class LfwDatabaseTest(unittest.TestCase):
       'fold9': 2368,
       'fold10': 2320
     }
-  
-  expected_unrestricted_files = {
-      'view1': (9525, 1549, 0),
-      'fold1': (8874, 2990, 1369),
-      'fold2': (8714, 3152, 1367),
-      'fold3': (9408, 2736, 1089),
-      'fold4': (9453, 2456, 1324),
-      'fold5': (9804, 2413, 1016),
-      'fold6': (9727, 2340, 1166),
-      'fold7': (9361, 2182, 1690),
-      'fold8': (9155, 2856, 1222),
-      'fold9': (9114, 2912, 1207),
-      'fold10': (9021, 2429, 1783)
+
+  expected_unrestricted_training_images = {
+      'view1': 9525,
+      'fold1': 8874,
+      'fold2': 8714,
+      'fold3': 9408,
+      'fold4': 9453,
+      'fold5': 9804,
+      'fold6': 9727,
+      'fold7': 9361,
+      'fold8': 9155,
+      'fold9': 9114,
+      'fold10': 9021
     }
-         
+
+
   def test01_clients(self):
-    """Tests if the clients() and models() functions work as expected"""
+    # Tests if the clients() and models() functions work as expected
     db = Database()
-    
-    # check the number of clients per protocol    
-    for e,l in self.expected_clients.iteritems():
-      self.assertEqual(len(db.clients(protocol=e, groups='world')), l[0])
-      self.assertEqual(len(db.clients(protocol=e, groups='dev')), l[1])
-      self.assertEqual(len(db.clients(protocol=e, groups='eval')), l[2])
+    # check the number of clients per protocol
+    for p,l in self.expected_clients.iteritems():
+      self.assertEqual(len(db.clients(protocol=p, groups='world')), l[0])
+      self.assertEqual(len(db.clients(protocol=p, groups='dev')), l[1])
+      self.assertEqual(len(db.clients(protocol=p, groups='eval')), l[2])
 
     # check the number of models per protocol
-    for e,l in self.expected_models.iteritems():
-      self.assertEqual(len(db.models(protocol=e, groups='world')), l[0])
-      self.assertEqual(len(db.models(protocol=e, groups='dev')), l[1])
-      self.assertEqual(len(db.models(protocol=e, groups='eval')), l[2])
+    for p,l in self.expected_models.iteritems():
+      self.assertEqual(len(db.models(protocol=p, groups='world')), l[0])
+      self.assertEqual(len(db.models(protocol=p, groups='dev')), l[1])
+      self.assertEqual(len(db.models(protocol=p, groups='eval')), l[2])
 
 
   def test02_files(self):
-    """Tests if the files() function returns the expected number and type of files"""
-    
+    # Tests if the files() function returns the expected number and type of files
     db = Database()
-
     # check that the files() function returns the same number of elements as the models() function does
-    for e,l in self.expected_models.iteritems():
-      self.assertEqual(len(db.files(protocol=e, groups='world')), l[0])
-      self.assertEqual(len(db.files(protocol=e, groups='dev', purposes='enrol')), l[1])
-      self.assertEqual(len(db.files(protocol=e, groups='eval', purposes='enrol')), l[2])
-    
-    # also check that the training files in the restricted configuration fit
-    for e,l in self.expected_restricted_training_images.iteritems():
-      self.assertEqual(len(db.files(protocol=e, groups='world', subworld='threefolds')), l)
+    for p,l in self.expected_models.iteritems():
+      self.assertEqual(len(db.objects(protocol=p, groups='world')), l[0])
+      self.assertEqual(len(db.objects(protocol=p, groups='dev', purposes='enrol')), l[1])
+      self.assertEqual(len(db.objects(protocol=p, groups='eval', purposes='enrol')), l[2])
 
-    # check that the number of files for the restricted case are 7701 in each fold 
-    for i in range(1,11):
-      self.assertEqual(len(db.files(protocol='fold%d'%i, subworld='sevenfolds')), 7701)
-    
-      
+    # check the number of probe files is correct
+    for p,l in self.expected_probes.iteritems():
+      self.assertEqual(len(db.objects(protocol=p, groups='dev', purposes='probe')), l[0])
+      self.assertEqual(len(db.objects(protocol=p, groups='eval', purposes='probe')), l[1])
+
+    # also check that the training files in the restricted configuration fit
+    for p,l in self.expected_restricted_training_images.iteritems():
+      self.assertEqual(len(db.objects(protocol=p, groups='world', subworld='threefolds')), l)
+
     # check that the probe files sum up to 1000 (view1) or 600 (view2)
-    for e in self.expected_models.iterkeys():
-      expected_probe_count = len(db.pairs(protocol=e, groups='dev'))
+    for p in self.expected_models.iterkeys():
+      expected_probe_count = len(db.pairs(protocol=p, groups='dev'))
       # count the probes for each model
       current_probe_count = 0
-      for model_id in db.models(protocol=e, groups='dev'):
-        current_probe_count += len(db.files(protocol=e, groups='dev', purposes='probe', model_ids = (model_id,)))
+      models = db.models(protocol=p, groups='dev')
+      for model_id in [model.id for model in models]:
+        current_probe_count += len(db.objects(protocol=p, groups='dev', purposes='probe', model_ids = (model_id,)))
       # assure that the number of probes is equal to the number of pairs
       self.assertEqual(current_probe_count, expected_probe_count)
-      
+
+
   def test03_pairs(self):
-    """Tests if the pairs() function returns the desired output"""
-    
+    # Tests if the pairs() function returns the desired output
     db = Database()
-    
-    numbers = ((2200, 1000, 0), (4200, 1200, 600))
-    
     # check the number of pairs
+    numbers = ((2200, 1000, 0), (4200, 1200, 600))
     index = 10
-    for e in sorted(self.expected_models.iterkeys()):
-      self.assertEqual(len(db.pairs(protocol=e, groups='world')), numbers[index > 0][0])
-      self.assertEqual(len(db.pairs(protocol=e, groups='dev')), numbers[index > 0][1])
-      self.assertEqual(len(db.pairs(protocol=e, groups='eval')), numbers[index > 0][2])
+    for p in sorted(self.expected_models.keys()):
+      self.assertEqual(len(db.pairs(protocol=p, groups='world')), numbers[index > 0][0])
+      self.assertEqual(len(db.pairs(protocol=p, groups='dev')), numbers[index > 0][1])
+      self.assertEqual(len(db.pairs(protocol=p, groups='eval')), numbers[index > 0][2])
+      # evil trick to get the first 10 times the numbers for view2, and once the numbers for view1
       index -= 1
 
-  def test04_unrestricted(self):
-    """Tests the unrestricted configuration"""
 
+  def test04_unrestricted(self):
+    # Tests the unrestricted configuration
     db = Database()
-    
     # check that the training files in the unrestricted configuration fit
-    for e,l in self.expected_unrestricted_files.iteritems():
-      self.assertEqual(len(db.files(protocol=e, groups='world', type='unrestricted')), l[0])
-      self.assertEqual(len(db.files(protocol=e, groups='dev', type='unrestricted')), l[1])
-      self.assertEqual(len(db.files(protocol=e, groups='eval', type='unrestricted')), l[2])
+    for p,l in self.expected_unrestricted_training_images.iteritems():
+      self.assertEqual(len(db.objects(protocol=p, groups='world', world_type='unrestricted')), l)
+      # for dev and eval, restricted and unrestricted should return the same number of files
+      self.assertEqual(len(db.objects(protocol=p, groups='dev', purposes='enrol', world_type='unrestricted')), self.expected_models[p][1])
+      self.assertEqual(len(db.objects(protocol=p, groups='eval', purposes='enrol', world_type='unrestricted')), self.expected_models[p][2])
+      self.assertEqual(len(db.objects(protocol=p, groups='dev', purposes='probe', world_type='unrestricted')), self.expected_probes[p][0])
+      self.assertEqual(len(db.objects(protocol=p, groups='eval', purposes='probe', world_type='unrestricted')), self.expected_probes[p][1])
+
 
   def test05_manage_dumplist_1(self):
-
     from bob.db.script.dbmanage import main
-
     self.assertEqual(main('lfw dumplist --self-test'.split()), 0)
 
-  def test06_manage_dumplist_2(self):
-    
-    from bob.db.script.dbmanage import main
 
+  def test06_manage_dumplist_2(self):
+    from bob.db.script.dbmanage import main
     self.assertEqual(main('lfw dumppairs --self-test'.split()), 0)
 
+
   def test07_manage_checkfiles(self):
-
     from bob.db.script.dbmanage import main
-
     self.assertEqual(main('lfw checkfiles --self-test'.split()), 0)

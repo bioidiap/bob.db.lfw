@@ -1,19 +1,19 @@
 #!/usr/bin/env python
 # vim: set fileencoding=utf-8 :
-# @author: Manuel Guenther <Manuel.Guenther@idiap.ch> 
+# @author: Manuel Guenther <Manuel.Guenther@idiap.ch>
 # @date: Thu May 24 10:41:42 CEST 2012
 #
 # Copyright (C) 2011-2012 Idiap Research Institute, Martigny, Switzerland
-# 
+#
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, version 3 of the License.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -31,10 +31,8 @@ def dumplist(args):
 
   from .query import Database
   db = Database()
-  
-  r = db.files(
-      directory=args.directory,
-      extension=args.extension,
+
+  r = db.objects(
       protocol=args.protocol,
       groups=args.groups,
       purposes=args.purposes
@@ -45,8 +43,8 @@ def dumplist(args):
     from bob.db.utils import null
     output = null()
 
-  for id, f in r.items():
-    output.write('%s\n' % (f,))
+  for f in r:
+    output.write('%s\n' % f.make_path(args.directory, args.extension))
 
   return 0
 
@@ -55,10 +53,8 @@ def dumppairs(args):
 
   from .query import Database
   db = Database()
-  
+
   r = db.pairs(
-      directory=args.directory,
-      extension=args.extension,
       protocol=args.protocol,
       groups=args.groups,
       classes=args.classes
@@ -69,8 +65,8 @@ def dumppairs(args):
     from bob.db.utils import null
     output = null()
 
-  for id, f in r.items():
-    output.write('%s\n' % (f,))
+  for f in r:
+    output.write('%s -> %s\n' % (f.enrol_file.make_path(args.directory, args.extension), f.probe_file.make_path(args.directory, args.extension)))
 
   return 0
 

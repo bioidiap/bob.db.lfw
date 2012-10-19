@@ -1,19 +1,19 @@
 #!/usr/bin/env python
 # vim: set fileencoding=utf-8 :
-# @author: Manuel Guenther <Manuel.Guenther@idiap.ch> 
+# @author: Manuel Guenther <Manuel.Guenther@idiap.ch>
 # @date: Thu May 24 10:41:42 CEST 2012
 #
 # Copyright (C) 2011-2012 Idiap Research Institute, Martigny, Switzerland
-# 
+#
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, version 3 of the License.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -30,14 +30,14 @@ def nodot(item):
 
 def add_files(session, basedir):
   """Adds files to the LFW database.
-     Returns dictionaries with ids of the clients and ids of the files 
+     Returns dictionaries with ids of the clients and ids of the files
      in the generated SQL tables"""
 
   def add_client(session, client_id):
     """Adds a client to the LFW database."""
     c = Client(client_dir)
     session.add(c)
- 
+
   def add_file(session, file_name):
     """Parses a single filename and add it to the list."""
     base_name = os.path.splitext(os.path.basename(file_name))[0]
@@ -55,7 +55,7 @@ def add_files(session, basedir):
       if filename.endswith('.jpg'):
         # adds a file to the database
         file_id = add_file(session, filename )
-  
+
 
 def add_people(session, basedir):
   """Adds the people to the LFW database"""
@@ -63,14 +63,14 @@ def add_people(session, basedir):
   def add_client(session, protocol, client_id, count):
     """Adds all images of a client"""
     for i in range(1,count+1):
-      session.add(People(protocol, File(client_id, i).m_id))
+      session.add(People(protocol, File(client_id, i).id))
 
   def parse_view1(session, filename, protocol):
     """Parses a file containing the people of view 1 of the LFW database"""
     pfile = open(filename)
     for line in pfile:
       llist = line.split()
-      if len(llist) == 2: # one person and the number of images 
+      if len(llist) == 2: # one person and the number of images
         add_client(session, protocol, llist[0], int(llist[1]))
 
   def parse_view2(session, filename):
@@ -82,9 +82,9 @@ def add_people(session, basedir):
       if len(llist) == 1: # the number of persons in the list
         protocol = "fold"+str(fold_id)
         fold_id += 1
-      elif len(llist) == 2: # one person and the number of images 
+      elif len(llist) == 2: # one person and the number of images
         add_client(session, protocol, llist[0], int(llist[1]))
-    
+
 
   # Adds view1 people
   parse_view1(session, os.path.join(basedir, 'view1', 'peopleDevTrain.txt'), 'train')
@@ -109,13 +109,13 @@ def add_pairs(session, basedir):
     pfile = open(filename)
     for line in pfile:
       llist = line.split()
-      if len(llist) == 3: # Matched pair 
-        file_id1 = File(llist[0], int(llist[1])).m_id
-        file_id2 = File(llist[0], int(llist[2])).m_id
+      if len(llist) == 3: # Matched pair
+        file_id1 = File(llist[0], int(llist[1])).id
+        file_id2 = File(llist[0], int(llist[2])).id
         add_mpair(session, protocol, file_id1, file_id2)
       elif len(llist) == 4: # Unmatched pair
-        file_id1 = File(llist[0], int(llist[1])).m_id
-        file_id2 = File(llist[2], int(llist[3])).m_id
+        file_id1 = File(llist[0], int(llist[1])).id
+        file_id2 = File(llist[2], int(llist[3])).id
         add_upair(session, protocol, file_id1, file_id2)
 
   # Adds view1 pairs
@@ -156,7 +156,7 @@ def create(args):
 
   dbfile = args.files[0]
 
-  if args.recreate: 
+  if args.recreate:
     if args.verbose and os.path.exists(dbfile):
       print('unlinking %s...' % dbfile)
     if os.path.exists(dbfile): os.unlink(dbfile)
@@ -166,7 +166,7 @@ def create(args):
 
   # the real work...
   create_tables(args)
-  s = session_try_nolock(args.type, args.files[0], echo=(args.verbose >= 2)) 
+  s = session_try_nolock(args.type, args.files[0], echo=(args.verbose >= 2))
   add_files(s, args.basedir)
   add_people(s, args.basedir)
   add_pairs(s, args.basedir)
@@ -185,5 +185,5 @@ def add_command(subparsers):
   parser.add_argument('-D', '--basedir', action='store', metavar='DIR',
       default='/idiap/resource/database/lfw',
       help="Change the relative path to the directory containing the images of the LFW database (defaults to %(default)s)")
-  
+
   parser.set_defaults(func=create) #action
