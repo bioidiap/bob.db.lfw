@@ -26,11 +26,11 @@ from .models import *
 from sqlalchemy.orm import aliased
 from .driver import Interface
 
-INFO = Interface()
+import xbob.db.verification.utils
 
-SQLITE_FILE = INFO.files()[0]
+SQLITE_FILE = Interface().files()[0]
 
-class Database(object):
+class Database(xbob.db.verification.utils.SQLiteDatabase):
   """The dataset class opens and maintains a connection opened to the Database.
 
   It provides many different ways to probe for the characteristics of the data
@@ -38,8 +38,9 @@ class Database(object):
   """
 
   def __init__(self):
-    # opens a session to the database - keep it open until the end
-    self.connect()
+    # call base class constructor
+    xbob.db.verification.utils.SQLiteDatabase.__init__(self, SQLITE_FILE)
+
     self.m_valid_protocols = ('view1', 'fold1', 'fold2', 'fold3', 'fold4', 'fold5', 'fold6', 'fold7', 'fold8', 'fold9', 'fold10')
     self.m_valid_groups = ('world', 'dev', 'eval')
     self.m_valid_purposes = ('enrol', 'probe')
@@ -47,40 +48,6 @@ class Database(object):
     self.m_subworld_counts = {'onefolds':1, 'twofolds':2, 'threefolds':3, 'fourfolds':4, 'fivefolds':5, 'sixfolds':6, 'sevenfolds':7}
     self.m_valid_types = ('restricted', 'unrestricted')
 
-  def connect(self):
-    """Tries connecting or re-connecting to the database"""
-    if not os.path.exists(SQLITE_FILE):
-      self.m_session = None
-
-    else:
-      self.m_session = utils.session_try_readonly(INFO.type(), SQLITE_FILE)
-
-  def is_valid(self):
-    """Returns if a valid session has been opened for reading the database"""
-
-    return self.m_session is not None
-
-  def assert_validity(self):
-    """Raise a RuntimeError if the database backend is not available"""
-
-    if not self.is_valid():
-      raise RuntimeError ("Database '%s' cannot be found at expected location '%s'. Create it and then try re-connecting using Database.connect()" % (INFO.name(), SQLITE_FILE))
-
-
-  def __check_single__(self, value, description, valid):
-    if not isinstance(value, str):
-      raise ValueError("The given %s '%s' has to be of type 'str'" % (description, value))
-    if not value in valid:
-      raise ValueError("The given %s '%s' need to be one of %s" %(description, value, valid) )
-
-  def __check_validity__(self, list, description, valid):
-    """Checks validity of user input data against a set of valid values"""
-    if not list: return valid
-    elif isinstance(list, str): return self.__check_validity__((list,), description, valid)
-    for k in list:
-      if k not in valid:
-        raise RuntimeError, 'Invalid %s "%s". Valid values are %s, or lists/tuples of those' % (description, k, valid)
-    return list
 
   def __eval__(self, fold):
     return int(fold[4:])
@@ -123,12 +90,10 @@ class Database(object):
 
     Returns: A list containing all Client objects which have the desired properties.
     """
-    self.assert_validity()
-
-    self.__check_single__(protocol, 'protocol', self.m_valid_protocols)
-    groups = self.__check_validity__(groups, 'group', self.m_valid_groups)
+    protocol = self.check_parameter_for_validity(protocol, 'protocol', self.m_valid_protocols)
+    groups = self.check_parameters_for_validity(groups, 'group', self.m_valid_groups)
     if subworld != None:
-      self.__check_single__(subworld, 'sub-world', self.m_subworld_counts.keys())
+      subworld = self.check_parameter_for_validity(subworld, 'sub-world', self.m_subworld_counts.keys())
 
     queries = []
 
@@ -136,12 +101,12 @@ class Database(object):
     if protocol == 'view1':
       if 'world' in groups:
         queries.append(\
-            self.m_session.query(Client).join(File).join(People).\
+            self.query(Client).join(File).join(People).\
                   filter(People.protocol == 'train').\
                   order_by(Client.id))
       if 'dev' in groups:
         queries.append(\
-            self.m_session.query(Client).join(File).join(People).\
+            self.query(Client).join(File).join(People).\
                   filter(People.protocol == 'test').\
                   order_by(Client.id))
     else:
@@ -149,19 +114,19 @@ class Database(object):
         # select training set for the given fold
         trainset = self.__world_for__(protocol, subworld)
         queries.append(\
-            self.m_session.query(Client).join(File).join(People).\
+            self.query(Client).join(File).join(People).\
                   filter(People.protocol.in_(trainset)).\
                   order_by(Client.id))
       if 'dev' in groups:
         # select development set for the given fold
         devset = self.__dev_for__(protocol)
         queries.append(\
-            self.m_session.query(Client).join(File).join(People).\
+            self.query(Client).join(File).join(People).\
                   filter(People.protocol.in_(devset)).\
                   order_by(Client.id))
       if 'eval' in groups:
         queries.append(\
-            self.m_session.query(Client).join(File).join(People).\
+            self.query(Client).join(File).join(People).\
                   filter(People.protocol == protocol).\
                   order_by(Client.id))
 
@@ -196,12 +161,10 @@ class Database(object):
     Returns: A list containing all File objects which have the desired properties.
     """
 
-    self.assert_validity()
-
-    self.__check_single__(protocol, 'protocol', self.m_valid_protocols)
-    groups = self.__check_validity__(groups, 'group', self.m_valid_groups)
-    if subworld != None:
-      self.__check_single__(subworld, 'sub-world', self.m_subworld_counts.keys())
+    protocol = self.check_parameter_for_validity(protocol, 'protocol', self.m_valid_protocols)
+    groups = self.check_parameters_for_validity(groups, 'group', self.m_valid_groups)
+    if subworld is not None:
+      subworld = self.check_parameter_for_validity(subworld, 'sub-world', self.m_subworld_counts.keys())
 
     # the restricted case...
     queries = []
@@ -210,29 +173,29 @@ class Database(object):
     if protocol == 'view1':
       if 'world' in groups:
         queries.append(\
-            self.m_session.query(File).join((Pair, or_(File.id == Pair.enrol_file_id, File.id == Pair.probe_file_id))).\
+            self.query(File).join((Pair, or_(File.id == Pair.enrol_file_id, File.id == Pair.probe_file_id))).\
                   filter(Pair.protocol == 'train'))
       if 'dev' in groups:
         queries.append(\
             # enroll files
-            self.m_session.query(File).join((Pair, File.id == Pair.enrol_file_id)).\
+            self.query(File).join((Pair, File.id == Pair.enrol_file_id)).\
                   filter(Pair.protocol == 'test'))
     else:
       if 'world' in groups:
         # select training set for the given fold
         trainset = self.__world_for__(protocol, subworld)
         queries.append(\
-            self.m_session.query(File).join((Pair, or_(File.id == Pair.enrol_file_id, File.id == Pair.probe_file_id))).\
+            self.query(File).join((Pair, or_(File.id == Pair.enrol_file_id, File.id == Pair.probe_file_id))).\
                   filter(Pair.protocol.in_(trainset)))
       if 'dev' in groups:
         # select development set for the given fold
         devset = self.__dev_for__(protocol)
         queries.append(\
-            self.m_session.query(File).join((Pair, File.id == Pair.enrol_file_id)).\
+            self.query(File).join((Pair, File.id == Pair.enrol_file_id)).\
                   filter(Pair.protocol.in_(devset)))
       if 'eval' in groups:
         queries.append(\
-            self.m_session.query(File).join((Pair, File.id == Pair.enrol_file_id)).\
+            self.query(File).join((Pair, File.id == Pair.enrol_file_id)).\
                   filter(Pair.protocol == protocol))
 
     # all queries are made; now collect the files
@@ -241,6 +204,30 @@ class Database(object):
       retval.extend([file for file in query])
 
     return retval
+
+
+  def model_ids(self, protocol=None, groups=None, subworld='sevenfolds'):
+    """Returns a list of model ids for the specific query by the user.
+    Note that for 'world' sets in the 'restricted' case, both images of the pairs are returned,
+    while for the 'dev' and 'eval' groups, only the first element of the pair is extracted.
+
+    Keyword Parameters:
+
+    protocol
+      The protocol to consider; one of: ('view1', 'fold1', ..., 'fold10')
+
+    groups
+      The groups to which the clients belong; one or several of: ('world', 'dev', 'eval')
+      The 'eval' group does not exist for protocol 'view1'.
+
+    subworld
+      The subset of the training data. Has to be specified if groups includes 'world'
+      and protocol is one of 'fold1', ..., 'fold10'.
+      It might be exactly one of ('onefolds', 'twofolds', ..., 'sevenfolds').
+
+    Returns: A list containing all model ids which have the desired properties.
+    """
+    return [file.id for file in self.models(protocol,groups,subworld)]
 
 
   def get_client_id_from_file_id(self, file_id):
@@ -255,7 +242,7 @@ class Database(object):
     """
     self.assert_validity()
 
-    q = self.m_session.query(File).\
+    q = self.query(File).\
           filter(File.id == file_id)
 
     assert q.count() == 1
@@ -315,15 +302,13 @@ class Database(object):
     Returns: A list of File objects considering all the filtering criteria.
     """
 
-    self.assert_validity()
-
-    self.__check_single__(protocol, "protocol", self.m_valid_protocols)
-    groups = self.__check_validity__(groups, "group", self.m_valid_groups)
-    purposes = self.__check_validity__(purposes, "purpose", self.m_valid_purposes)
-    self.__check_single__(world_type, 'training type', self.m_valid_types)
+    protocol = self.check_parameter_for_validity(protocol, "protocol", self.m_valid_protocols)
+    groups = self.check_parameters_for_validity(groups, "group", self.m_valid_groups)
+    purposes = self.check_parameters_for_validity(purposes, "purpose", self.m_valid_purposes)
+    world_type = self.check_parameter_for_validity(world_type, 'training type', self.m_valid_types)
 
     if subworld != None:
-      self.__check_single__(subworld, 'sub-world', self.m_subworld_counts.keys())
+      subworld = self.check_parameter_for_validity(subworld, 'sub-world', self.m_subworld_counts.keys())
 
     if(isinstance(model_ids,str)):
       model_ids = (model_ids,)
@@ -337,21 +322,21 @@ class Database(object):
         # training files of view1
         if world_type == 'restricted':
           queries.append(\
-              self.m_session.query(File).join((Pair, or_(File.id == Pair.enrol_file_id, File.id == Pair.probe_file_id))).\
+              self.query(File).join((Pair, or_(File.id == Pair.enrol_file_id, File.id == Pair.probe_file_id))).\
                   filter(Pair.protocol == 'train'))
         else:
           queries.append(\
-              self.m_session.query(File).join(People).\
+              self.query(File).join(People).\
                   filter(People.protocol == 'train'))
       if 'dev' in groups:
         # test files of view1
         if 'enrol' in purposes:
           queries.append(\
-              self.m_session.query(File).join((Pair, File.id == Pair.enrol_file_id)).\
+              self.query(File).join((Pair, File.id == Pair.enrol_file_id)).\
                   filter(Pair.protocol == 'test'))
         if 'probe' in purposes:
           probe_queries.append(\
-              self.m_session.query(File).\
+              self.query(File).\
                   join((Pair, File.id == Pair.probe_file_id)).\
                   join((file_alias, Pair.enrol_file_id == file_alias.id)).\
                   filter(Pair.protocol == 'test'))
@@ -363,11 +348,11 @@ class Database(object):
         trainset = self.__world_for__(protocol, subworld)
         if world_type == 'restricted':
           queries.append(\
-              self.m_session.query(File).join((Pair, or_(File.id == Pair.enrol_file_id, File.id == Pair.probe_file_id))).\
+              self.query(File).join((Pair, or_(File.id == Pair.enrol_file_id, File.id == Pair.probe_file_id))).\
                   filter(Pair.protocol.in_(trainset)))
         else:
           queries.append(\
-              self.m_session.query(File).join(People).\
+              self.query(File).join(People).\
                   filter(People.protocol.in_(trainset)))
 
       if 'dev' in groups:
@@ -375,11 +360,11 @@ class Database(object):
         devset = self.__dev_for__(protocol)
         if 'enrol' in purposes:
           queries.append(\
-              self.m_session.query(File).join((Pair, File.id == Pair.enrol_file_id)).\
+              self.query(File).join((Pair, File.id == Pair.enrol_file_id)).\
                   filter(Pair.protocol.in_(devset)))
         if 'probe' in purposes:
           probe_queries.append(\
-              self.m_session.query(File).\
+              self.query(File).\
                   join((Pair, File.id == Pair.probe_file_id)).\
                   join((file_alias, file_alias.id == Pair.enrol_file_id)).\
                   filter(Pair.protocol.in_(devset)))
@@ -388,11 +373,11 @@ class Database(object):
         # evaluation set of current fold of view 2; this is the REAL fold
         if 'enrol' in purposes:
           queries.append(\
-              self.m_session.query(File).join((Pair, File.id == Pair.enrol_file_id)).\
+              self.query(File).join((Pair, File.id == Pair.enrol_file_id)).\
                   filter(Pair.protocol == protocol))
         if 'probe' in purposes:
           probe_queries.append(\
-              self.m_session.query(File).\
+              self.query(File).\
                   join((Pair, File.id == Pair.probe_file_id)).\
                   join((file_alias, file_alias.id == Pair.enrol_file_id)).\
                   filter(Pair.protocol == protocol))
@@ -437,17 +422,15 @@ class Database(object):
     """
 
     def default_query():
-      return self.m_session.query(Pair).\
+      return self.query(Pair).\
                 join(File1, File1.id == Pair.enrol_file_id).\
                 join(File2, File2.id == Pair.probe_file_id)
 
-    self.assert_validity()
-
-    self.__check_single__(protocol, "protocol", self.m_valid_protocols)
-    groups = self.__check_validity__(groups, "group", self.m_valid_groups)
-    classes = self.__check_validity__(classes, "class", self.m_valid_classes)
+    protocol = self.check_parameter_for_validity(protocol, "protocol", self.m_valid_protocols)
+    groups = self.check_parameters_for_validity(groups, "group", self.m_valid_groups)
+    classes = self.check_parameters_for_validity(classes, "class", self.m_valid_classes)
     if subworld != None:
-      self.__check_single__(subworld, 'sub-world', self.m_subworld_counts.keys())
+      subworld = self.check_parameter_for_validity(subworld, 'sub-world', self.m_subworld_counts.keys())
 
     queries = []
     File1 = aliased(File)
