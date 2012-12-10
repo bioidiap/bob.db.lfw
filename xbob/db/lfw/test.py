@@ -171,16 +171,13 @@ class LfwDatabaseTest(unittest.TestCase):
       self.assertEqual(len(db.objects(protocol=p, groups='eval', purposes='probe', world_type='unrestricted')), self.expected_probes[p][1])
 
 
-  def test05_manage_dumplist_1(self):
+  def test05_driver_api(self):
     from bob.db.script.dbmanage import main
     self.assertEqual(main('lfw dumplist --self-test'.split()), 0)
-
-
-  def test06_manage_dumplist_2(self):
-    from bob.db.script.dbmanage import main
+    self.assertEqual(main('lfw dumplist --protocol=fold8 --group=dev --purpose=enrol --self-test'.split()), 0)
     self.assertEqual(main('lfw dumppairs --self-test'.split()), 0)
-
-
-  def test07_manage_checkfiles(self):
-    from bob.db.script.dbmanage import main
+    self.assertEqual(main('lfw dumppairs --protocol=fold8 --group=dev --class=client --self-test'.split()), 0)
     self.assertEqual(main('lfw checkfiles --self-test'.split()), 0)
+    self.assertEqual(main('lfw reverse Thomas_Watjen/Thomas_Watjen_0001 --self-test'.split()), 0)
+    self.assertEqual(main('lfw path Thomas_Watjen_0001 --self-test'.split()), 0)
+

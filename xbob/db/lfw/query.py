@@ -44,7 +44,7 @@ class Database(xbob.db.verification.utils.SQLiteDatabase):
     self.m_valid_protocols = ('view1', 'fold1', 'fold2', 'fold3', 'fold4', 'fold5', 'fold6', 'fold7', 'fold8', 'fold9', 'fold10')
     self.m_valid_groups = ('world', 'dev', 'eval')
     self.m_valid_purposes = ('enrol', 'probe')
-    self.m_valid_classes = ('matched', 'unmatched')
+    self.m_valid_classes = ('client', 'impostor') # 'matched' and 'unmatched'
     self.m_subworld_counts = {'onefolds':1, 'twofolds':2, 'threefolds':3, 'fourfolds':4, 'fivefolds':5, 'sixfolds':6, 'sevenfolds':7}
     self.m_valid_types = ('restricted', 'unrestricted')
 
@@ -269,7 +269,6 @@ class Database(xbob.db.verification.utils.SQLiteDatabase):
     return self.get_client_id_from_file_id(model_id)
 
 
-
   def objects(self, protocol=None, model_ids=None, groups=None, purposes=None, subworld='sevenfolds', world_type='restricted'):
     """Returns a list of File objects for the specific query by the user.
 
@@ -310,7 +309,7 @@ class Database(xbob.db.verification.utils.SQLiteDatabase):
     if subworld != None:
       subworld = self.check_parameter_for_validity(subworld, 'sub-world', self.m_subworld_counts.keys())
 
-    if(isinstance(model_ids,str)):
+    if(isinstance(model_ids,(str,unicode))):
       model_ids = (model_ids,)
 
     queries = []
@@ -454,9 +453,9 @@ class Database(xbob.db.verification.utils.SQLiteDatabase):
 
     retval = []
     for query in queries:
-      if not 'matched' in classes:
+      if not 'client' in classes:
         query = query.filter(Pair.is_match == False)
-      if not 'unmatched' in classes:
+      if not 'impostor' in classes:
         query = query.filter(Pair.is_match == True)
 
       for pair in query:
@@ -486,9 +485,7 @@ class Database(xbob.db.verification.utils.SQLiteDatabase):
     file ids.
     """
 
-    self.assert_validity()
-
-    queried_files = self.session.query(File).filter(File.id.in_(file_ids))
+    queried_files = self.query(File).filter(File.id.in_(file_ids))
     retval = []
     for id in file_ids:
       retval.extend([file.make_path(prefix, suffix) for file in queried_files if file.id == id])
@@ -507,10 +504,8 @@ class Database(xbob.db.verification.utils.SQLiteDatabase):
     Returns a list (that may be empty).
     """
 
-    self.assert_validity()
-
     retval = []
-    queried_files = self.session.query(File).filter(File.path.in_(paths))
+    queried_files = self.query(File).filter(File.path.in_(paths))
     for path in paths:
       retval.extend([file.id for file in queried_files if file.path == path])
     return retval
