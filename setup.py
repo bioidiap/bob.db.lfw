@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # vim: set fileencoding=utf-8 :
-# Laurent El Shafey <laurent.el-shafey@idiap.ch>
+# Manuel Guenther <manuel.guenther@idiap.ch>
 
 from setuptools import setup, find_packages
 
@@ -9,12 +9,12 @@ from setuptools import setup, find_packages
 setup(
 
     name='xbob.db.lfw',
-    version='1.0.0a1',
+    version='1.0.0',
     description='Labeled Faces in the Wild Database Access API for Bob',
     url='http://github.com/bioidiap/xbob.db.lfw',
     license='GPLv3',
-    author='Laurent El Shafey',
-    author_email='laurent.el-shafey@idiap.ch',
+    author='Manuel Guenther',
+    author_email='manuel.guenther@idiap.ch',
     long_description=open('README.rst').read(),
 
     # This line is required for any distutils based packaging.

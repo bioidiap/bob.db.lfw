@@ -464,7 +464,7 @@ class Database(xbob.db.verification.utils.SQLiteDatabase):
     return retval
 
 
-  def paths(self, file_ids, prefix='', suffix=''):
+  def paths(self, file_ids, prefix=None, suffix=None):
     """Returns a full file paths considering particular file ids, a given
     directory and an extension.
 
@@ -504,8 +504,8 @@ class Database(xbob.db.verification.utils.SQLiteDatabase):
     Returns a list (that may be empty).
     """
 
-    retval = []
     queried_files = self.query(File).filter(File.path.in_(paths))
+    retval = []
     for path in paths:
       retval.extend([file.id for file in queried_files if file.path == path])
     return retval
