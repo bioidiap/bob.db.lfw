@@ -28,7 +28,7 @@ def nodot(item):
   """Can be used to ignore hidden files, starting with the . character."""
   return item[0] != '.'
 
-def add_files(session, basedir):
+def add_files(session, basedir, verbose):
   """Adds files to the LFW database.
      Returns dictionaries with ids of the clients and ids of the files
      in the generated SQL tables"""
@@ -37,6 +37,7 @@ def add_files(session, basedir):
     """Adds a client to the LFW database."""
     c = Client(client_dir)
     session.add(c)
+    return c.id
 
   def add_file(session, file_name):
     """Parses a single filename and add it to the list."""
@@ -47,22 +48,26 @@ def add_files(session, basedir):
     session.add(f)
 
   # Loops over the directory structure
+  if verbose: print "Adding clients and files ..."
   imagedir = os.path.join(basedir, 'all_images')
   for client_dir in filter(nodot, sorted([d for d in os.listdir(imagedir)])):
     # adds a client to the database
     client_name = add_client(session, client_dir)
+    if verbose>1: print "  Adding client '%s'" % client_name
     for filename in filter(nodot, sorted([d for d in os.listdir(os.path.join(imagedir, client_dir))])):
       if filename.endswith('.jpg'):
         # adds a file to the database
-        file_id = add_file(session, filename )
+        if verbose>1: print "    Adding file '%s'" % filename
+        add_file(session, filename)
 
 
-def add_people(session, basedir):
+def add_people(session, basedir, verbose):
   """Adds the people to the LFW database"""
 
   def add_client(session, protocol, client_id, count):
     """Adds all images of a client"""
     for i in range(1,count+1):
+      if verbose>1: print "  Adding file '%s' to protocol '%s'" % (File(client_id, i).id, protocol)
       session.add(People(protocol, File(client_id, i).id))
 
   def parse_view1(session, filename, protocol):
@@ -87,13 +92,16 @@ def add_people(session, basedir):
 
 
   # Adds view1 people
+  if verbose: print "Adding people from 'peopleDevTrain.txt' ..."
   parse_view1(session, os.path.join(basedir, 'view1', 'peopleDevTrain.txt'), 'train')
+  if verbose: print "Adding people from 'peopleDevTest.txt' ..."
   parse_view1(session, os.path.join(basedir, 'view1', 'peopleDevTest.txt'), 'test')
 
   # Adds view2 people
+  if verbose: print "Adding people from 'people.txt' ..."
   parse_view2(session, os.path.join(basedir, 'view2', 'people.txt'))
 
-def add_pairs(session, basedir):
+def add_pairs(session, basedir, verbose):
   """Adds the pairs for all protocols of the LFW database"""
 
   def add_mpair(session, protocol, file_id1, file_id2):
@@ -112,26 +120,40 @@ def add_pairs(session, basedir):
       if len(llist) == 3: # Matched pair
         file_id1 = File(llist[0], int(llist[1])).id
         file_id2 = File(llist[0], int(llist[2])).id
+        if verbose>1: print "  Adding matching pair ('%s', '%s')" % (file_id1, file_id2)
         add_mpair(session, protocol, file_id1, file_id2)
       elif len(llist) == 4: # Unmatched pair
         file_id1 = File(llist[0], int(llist[1])).id
         file_id2 = File(llist[2], int(llist[3])).id
+        if verbose>1: print "  Adding unmatching pair ('%s', '%s')" % (file_id1, file_id2)
         add_upair(session, protocol, file_id1, file_id2)
 
   # Adds view1 pairs
+  if verbose: print "Adding pairs from 'pairsDevTrain.txt' ..."
   parse_file(session, os.path.join(basedir, 'view1', 'pairsDevTrain.txt'), 'train')
+  if verbose: print "Adding pairs from 'pairsDevTest.txt' ..."
   parse_file(session, os.path.join(basedir, 'view1', 'pairsDevTest.txt'), 'test')
 
   # Adds view2 pairs
+  if verbose: print "Adding pairs from 'pairs_fold1.txt' ..."
   parse_file(session, os.path.join(basedir, 'view2', 'pairs_fold1.txt'), 'fold1')
+  if verbose: print "Adding pairs from 'pairs_fold2.txt' ..."
   parse_file(session, os.path.join(basedir, 'view2', 'pairs_fold2.txt'), 'fold2')
+  if verbose: print "Adding pairs from 'pairs_fold3.txt' ..."
   parse_file(session, os.path.join(basedir, 'view2', 'pairs_fold3.txt'), 'fold3')
+  if verbose: print "Adding pairs from 'pairs_fold4.txt' ..."
   parse_file(session, os.path.join(basedir, 'view2', 'pairs_fold4.txt'), 'fold4')
+  if verbose: print "Adding pairs from 'pairs_fold5.txt' ..."
   parse_file(session, os.path.join(basedir, 'view2', 'pairs_fold5.txt'), 'fold5')
+  if verbose: print "Adding pairs from 'pairs_fold6.txt' ..."
   parse_file(session, os.path.join(basedir, 'view2', 'pairs_fold6.txt'), 'fold6')
+  if verbose: print "Adding pairs from 'pairs_fold7.txt' ..."
   parse_file(session, os.path.join(basedir, 'view2', 'pairs_fold7.txt'), 'fold7')
+  if verbose: print "Adding pairs from 'pairs_fold8.txt' ..."
   parse_file(session, os.path.join(basedir, 'view2', 'pairs_fold8.txt'), 'fold8')
+  if verbose: print "Adding pairs from 'pairs_fold9.txt' ..."
   parse_file(session, os.path.join(basedir, 'view2', 'pairs_fold9.txt'), 'fold9')
+  if verbose: print "Adding pairs from 'pairs_fold10.txt' ..."
   parse_file(session, os.path.join(basedir, 'view2', 'pairs_fold10.txt'), 'fold10')
 
 
@@ -140,7 +162,7 @@ def create_tables(args):
 
   from bob.db.utils import create_engine_try_nolock
 
-  engine = create_engine_try_nolock(args.type, args.files[0], echo=(args.verbose >= 2))
+  engine = create_engine_try_nolock(args.type, args.files[0], echo=(args.verbose > 2))
   Client.metadata.create_all(engine)
   File.metadata.create_all(engine)
   People.metadata.create_all(engine)
@@ -166,10 +188,10 @@ def create(args):
 
   # the real work...
   create_tables(args)
-  s = session_try_nolock(args.type, args.files[0], echo=(args.verbose >= 2))
-  add_files(s, args.basedir)
-  add_people(s, args.basedir)
-  add_pairs(s, args.basedir)
+  s = session_try_nolock(args.type, args.files[0], echo=(args.verbose > 2))
+  add_files(s, args.basedir, args.verbose)
+  add_people(s, args.basedir, args.verbose)
+  add_pairs(s, args.basedir, args.verbose)
   s.commit()
   s.close()
 
@@ -178,12 +200,8 @@ def add_command(subparsers):
 
   parser = subparsers.add_parser('create', help=create.__doc__)
 
-  parser.add_argument('-R', '--recreate', action='store_true', default=False,
-      help="If set, I'll first erase the current database")
-  parser.add_argument('-v', '--verbose', action='count',
-      help="Do SQL operations in a verbose way")
-  parser.add_argument('-D', '--basedir', action='store', metavar='DIR',
-      default='/idiap/resource/database/lfw',
-      help="Change the relative path to the directory containing the images of the LFW database (defaults to %(default)s)")
+  parser.add_argument('-R', '--recreate', action='store_true', help='If set, I\'ll first erase the current database')
+  parser.add_argument('-v', '--verbose', action='count', help='Do SQL operations in a verbose way?')
+  parser.add_argument('-D', '--basedir', metavar='DIR', default='/idiap/resource/database/lfw', help='Change the relative path to the directory containing the images of the LFW database.')
 
   parser.set_defaults(func=create) #action
