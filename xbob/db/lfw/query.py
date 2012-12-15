@@ -422,8 +422,8 @@ class Database(xbob.db.verification.utils.SQLiteDatabase):
 
     def default_query():
       return self.query(Pair).\
-                join(File1, File1.id == Pair.enrol_file_id).\
-                join(File2, File2.id == Pair.probe_file_id)
+                join((File1, File1.id == Pair.enrol_file_id)).\
+                join((File2, File2.id == Pair.probe_file_id))
 
     protocol = self.check_parameter_for_validity(protocol, "protocol", self.m_valid_protocols)
     groups = self.check_parameters_for_validity(groups, "group", self.m_valid_groups)
