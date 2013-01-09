@@ -114,7 +114,7 @@ class LfwDatabaseTest(unittest.TestCase):
       self.assertEqual(len(db.models(protocol=p, groups='eval')), l[2])
 
 
-  def test02_files(self):
+  def test02_objects(self):
     # Tests if the files() function returns the expected number and type of files
     db = Database()
     # check that the files() function returns the same number of elements as the models() function does

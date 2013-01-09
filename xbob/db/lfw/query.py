@@ -39,7 +39,7 @@ class Database(xbob.db.verification.utils.SQLiteDatabase):
 
   def __init__(self):
     # call base class constructor
-    xbob.db.verification.utils.SQLiteDatabase.__init__(self, SQLITE_FILE)
+    xbob.db.verification.utils.SQLiteDatabase.__init__(self, SQLITE_FILE, File)
 
     self.m_valid_protocols = ('view1', 'fold1', 'fold2', 'fold3', 'fold4', 'fold5', 'fold6', 'fold7', 'fold8', 'fold9', 'fold10')
     self.m_valid_groups = ('world', 'dev', 'eval')
@@ -462,53 +462,5 @@ class Database(xbob.db.verification.utils.SQLiteDatabase):
         retval.append(pair)
 
     return retval
-
-
-  def paths(self, file_ids, prefix=None, suffix=None):
-    """Returns a full file paths considering particular file ids, a given
-    directory and an extension.
-
-    Keyword Parameters:
-
-    file_ids
-      The ids of the object in the database table "file". This object should be
-      a python iterable (such as a tuple or list).
-
-    prefix
-      The bit of path to be prepended to the filename stem
-
-    suffix
-      The extension determines the suffix that will be appended to the filename
-      stem.
-
-    Returns a list (that may be empty) of the fully constructed paths given the
-    file ids.
-    """
-
-    queried_files = self.query(File).filter(File.id.in_(file_ids))
-    retval = []
-    for id in file_ids:
-      retval.extend([file.make_path(prefix, suffix) for file in queried_files if file.id == id])
-    return retval
-
-
-  def reverse(self, paths):
-    """Reverses the lookup: from certain stems, returning file ids
-
-    Keyword Parameters:
-
-    paths
-      The filename stems I'll query for. This object should be a python
-      iterable (such as a tuple or list)
-
-    Returns a list (that may be empty).
-    """
-
-    queried_files = self.query(File).filter(File.path.in_(paths))
-    retval = []
-    for path in paths:
-      retval.extend([file.id for file in queried_files if file.path == path])
-    return retval
-
 
 

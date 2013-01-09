@@ -115,7 +115,7 @@ def reverse(args):
     output = null()
 
   r = db.reverse(args.path)
-  for id in r: output.write('%s\n' % id)
+  for f in r: output.write('%s\n' % f.id)
 
   if not r: return 1
 
@@ -175,24 +175,24 @@ class Interface(BaseInterface):
     db = Database()
 
     # the "dumplist" action
-    dumplist_parser = subparsers.add_parser('dumplist', help=dumplist.__doc__)
-    dumplist_parser.add_argument('-d', '--directory', help="if given, this path will be prepended to every entry returned.")
-    dumplist_parser.add_argument('-e', '--extension', help="if given, this extension will be appended to every entry returned.")
-    dumplist_parser.add_argument('-p', '--protocol', default='view1', help="specifies the protocol for which the files should be dumped.", choices=db.m_valid_protocols)
-    dumplist_parser.add_argument('-g', '--group', help="if given, limits the dump to a particular group of the data.", choices=db.m_valid_groups)
-    dumplist_parser.add_argument('-u', '--purpose', help="if given, limits the dump to a particular purpose.", choices=db.m_valid_purposes)
-    dumplist_parser.add_argument('--self-test', dest="selftest", action='store_true', help=argparse.SUPPRESS)
-    dumplist_parser.set_defaults(func=dumplist) #action
+    parser = subparsers.add_parser('dumplist', help=dumplist.__doc__)
+    parser.add_argument('-d', '--directory', help="if given, this path will be prepended to every entry returned.")
+    parser.add_argument('-e', '--extension', help="if given, this extension will be appended to every entry returned.")
+    parser.add_argument('-p', '--protocol', default='view1', help="specifies the protocol for which the files should be dumped.", choices=db.m_valid_protocols)
+    parser.add_argument('-g', '--group', help="if given, limits the dump to a particular group of the data.", choices=db.m_valid_groups)
+    parser.add_argument('-u', '--purpose', help="if given, limits the dump to a particular purpose.", choices=db.m_valid_purposes)
+    parser.add_argument('--self-test', dest="selftest", action='store_true', help=argparse.SUPPRESS)
+    parser.set_defaults(func=dumplist) #action
 
     # the "dumppairs" action
-    dumppairs_parser = subparsers.add_parser('dumppairs', help=dumplist.__doc__)
-    dumppairs_parser.add_argument('-d', '--directory', help="if given, this path will be prepended to every entry returned.")
-    dumppairs_parser.add_argument('-e', '--extension', help="if given, this extension will be appended to every entry returned.")
-    dumppairs_parser.add_argument('-p', '--protocol', default='view1', help="specifies the protocol for which the files should be dumped.", choices=db.m_valid_protocols)
-    dumppairs_parser.add_argument('-g', '--group', help="if given, limits the dump to a particular group of the data.", choices=db.m_valid_groups)
-    dumppairs_parser.add_argument('-c', '--class', dest='sclass', help="if given, limits the dump to a particular class of pairs.", choices=db.m_valid_classes)
-    dumppairs_parser.add_argument('--self-test', dest="selftest", action='store_true', help=argparse.SUPPRESS)
-    dumppairs_parser.set_defaults(func=dumppairs) #action
+    parser = subparsers.add_parser('dumppairs', help=dumplist.__doc__)
+    parser.add_argument('-d', '--directory', help="if given, this path will be prepended to every entry returned.")
+    parser.add_argument('-e', '--extension', help="if given, this extension will be appended to every entry returned.")
+    parser.add_argument('-p', '--protocol', default='view1', help="specifies the protocol for which the files should be dumped.", choices=db.m_valid_protocols)
+    parser.add_argument('-g', '--group', help="if given, limits the dump to a particular group of the data.", choices=db.m_valid_groups)
+    parser.add_argument('-c', '--class', dest='sclass', help="if given, limits the dump to a particular class of pairs.", choices=db.m_valid_classes)
+    parser.add_argument('--self-test', dest="selftest", action='store_true', help=argparse.SUPPRESS)
+    parser.set_defaults(func=dumppairs) #action
 
     # the "checkfiles" action
     parser = subparsers.add_parser('checkfiles', help=checkfiles.__doc__)
