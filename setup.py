@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # vim: set fileencoding=utf-8 :
-# Manuel Guenther <manuel.guenther@idiap.ch>
+# author: Manuel Guenther <manuel.guenther@idiap.ch>
+# date:   Wed Feb 13 12:35:29 CET 2013
 
 from setuptools import setup, find_packages
 
@@ -9,7 +10,7 @@ from setuptools import setup, find_packages
 setup(
 
     name='xbob.db.lfw',
-    version='1.0.1',
+    version='1.0.2',
     description='Labeled Faces in the Wild Database Access API for Bob',
     url='http://github.com/bioidiap/xbob.db.lfw',
     license='GPLv3',
