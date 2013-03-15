@@ -27,32 +27,33 @@ class LfwDatabaseTest(unittest.TestCase):
   """Performs various tests on the Labeled Faces in the Wild database."""
 
   # expected numbers of clients
+  # restricted; unrestricted; dev; eval
   expected_clients = {
-      'view1': (4038, 1711, 0),
-      'fold1': (3959, 1189, 601),
-      'fold2': (3984, 1210, 555),
-      'fold3': (4041, 1156, 552),
-      'fold4': (4082, 1107, 560),
-      'fold5': (4070, 1112, 567),
-      'fold6': (4095, 1127, 527),
-      'fold7': (4058, 1094, 597),
-      'fold8': (4024, 1124, 601),
-      'fold9': (3971, 1198, 580),
-      'fold10': (3959, 1181, 609)
+      'view1': (4038, 2132, 1711, 0),
+      'fold1': (3959, 2956, 1189, 601),
+      'fold2': (3984, 2986, 1210, 555),
+      'fold3': (4041, 3040, 1156, 552),
+      'fold4': (4082, 3052, 1107, 560),
+      'fold5': (4070, 3039, 1112, 567),
+      'fold6': (4095, 3017, 1127, 527),
+      'fold7': (4058, 2997, 1094, 597),
+      'fold8': (4024, 2976, 1124, 601),
+      'fold9': (3971, 2956, 1198, 580),
+      'fold10': (3959, 2948, 1181, 609)
     }
 
   expected_models = {
-      'view1': (3443, 853, 0),
-      'fold1': (5345, 916, 472),
-      'fold2': (5333, 930, 462),
-      'fold3': (5381, 934, 440),
-      'fold4': (5434, 902, 459),
-      'fold5': (5473, 899, 436),
-      'fold6': (5467, 895, 441),
-      'fold7': (5408, 877, 476),
-      'fold8': (5360, 917, 462),
-      'fold9': (5339, 938, 458),
-      'fold10': (5367, 920, 458)
+      'view1': (853, 0),
+      'fold1': (916, 472),
+      'fold2': (930, 462),
+      'fold3': (934, 440),
+      'fold4': (902, 459),
+      'fold5': (899, 436),
+      'fold6': (895, 441),
+      'fold7': (877, 476),
+      'fold8': (917, 462),
+      'fold9': (938, 458),
+      'fold10': (920, 458)
     }
 
   expected_probes = {
@@ -103,15 +104,15 @@ class LfwDatabaseTest(unittest.TestCase):
     db = Database()
     # check the number of clients per protocol
     for p,l in self.expected_clients.iteritems():
-      self.assertEqual(len(db.clients(protocol=p, groups='world')), l[0])
-      self.assertEqual(len(db.clients(protocol=p, groups='dev')), l[1])
-      self.assertEqual(len(db.clients(protocol=p, groups='eval')), l[2])
+      self.assertEqual(len(db.clients(protocol=p, groups='world', world_type='unrestricted')), l[0])
+      self.assertEqual(len(db.clients(protocol=p, groups='world', world_type='restricted')), l[1])
+      self.assertEqual(len(db.clients(protocol=p, groups='dev')), l[2])
+      self.assertEqual(len(db.clients(protocol=p, groups='eval')), l[3])
 
     # check the number of models per protocol
     for p,l in self.expected_models.iteritems():
-      self.assertEqual(len(db.models(protocol=p, groups='world')), l[0])
-      self.assertEqual(len(db.models(protocol=p, groups='dev')), l[1])
-      self.assertEqual(len(db.models(protocol=p, groups='eval')), l[2])
+      self.assertEqual(len(db.models(protocol=p, groups='dev')), l[0])
+      self.assertEqual(len(db.models(protocol=p, groups='eval')), l[1])
 
 
   def test02_objects(self):
@@ -119,9 +120,8 @@ class LfwDatabaseTest(unittest.TestCase):
     db = Database()
     # check that the files() function returns the same number of elements as the models() function does
     for p,l in self.expected_models.iteritems():
-      self.assertEqual(len(db.objects(protocol=p, groups='world')), l[0])
-      self.assertEqual(len(db.objects(protocol=p, groups='dev', purposes='enrol')), l[1])
-      self.assertEqual(len(db.objects(protocol=p, groups='eval', purposes='enrol')), l[2])
+      self.assertEqual(len(db.objects(protocol=p, groups='dev', purposes='enrol')), l[0])
+      self.assertEqual(len(db.objects(protocol=p, groups='eval', purposes='enrol')), l[1])
 
     # check the number of probe files is correct
     for p,l in self.expected_probes.iteritems():
@@ -165,8 +165,8 @@ class LfwDatabaseTest(unittest.TestCase):
     for p,l in self.expected_unrestricted_training_images.iteritems():
       self.assertEqual(len(db.objects(protocol=p, groups='world', world_type='unrestricted')), l)
       # for dev and eval, restricted and unrestricted should return the same number of files
-      self.assertEqual(len(db.objects(protocol=p, groups='dev', purposes='enrol', world_type='unrestricted')), self.expected_models[p][1])
-      self.assertEqual(len(db.objects(protocol=p, groups='eval', purposes='enrol', world_type='unrestricted')), self.expected_models[p][2])
+      self.assertEqual(len(db.objects(protocol=p, groups='dev', purposes='enrol', world_type='unrestricted')), self.expected_models[p][0])
+      self.assertEqual(len(db.objects(protocol=p, groups='eval', purposes='enrol', world_type='unrestricted')), self.expected_models[p][1])
       self.assertEqual(len(db.objects(protocol=p, groups='dev', purposes='probe', world_type='unrestricted')), self.expected_probes[p][0])
       self.assertEqual(len(db.objects(protocol=p, groups='eval', purposes='probe', world_type='unrestricted')), self.expected_probes[p][1])
 

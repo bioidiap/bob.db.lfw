@@ -71,7 +71,7 @@ class Database(xbob.db.verification.utils.SQLiteDatabase):
     return ["fold%d"%f for f in world]
 
 
-  def clients(self, protocol=None, groups=None, subworld='sevenfolds'):
+  def clients(self, protocol=None, groups=None, subworld='sevenfolds', world_type='restricted'):
     """Returns a list of Client objects for the specific query by the user.
 
     Keyword Parameters:
@@ -87,6 +87,13 @@ class Database(xbob.db.verification.utils.SQLiteDatabase):
       The subset of the training data. Has to be specified if groups includes 'world'
       and protocol is one of 'fold1', ..., 'fold10'.
       It might be exactly one of ('onefolds', 'twofolds', ..., 'sevenfolds').
+      Ignored for group 'dev' and 'eval'.
+
+    world_type
+      One of ('restricted', 'unrestricted'). If 'restricted' (the default), only the
+      clients that are used in one of the training pairs are returned. For 'unrestricted',
+      all training people are returned.
+      Ignored for group 'dev' and 'eval'.
 
     Returns: A list containing all Client objects which have the desired properties.
     """
@@ -94,16 +101,23 @@ class Database(xbob.db.verification.utils.SQLiteDatabase):
     groups = self.check_parameters_for_validity(groups, 'group', self.m_valid_groups)
     if subworld != None:
       subworld = self.check_parameter_for_validity(subworld, 'sub-world', self.m_subworld_counts.keys())
+    world_type = self.check_parameter_for_validity(world_type, 'training type', self.m_valid_types)
 
     queries = []
 
     # List of the clients
     if protocol == 'view1':
       if 'world' in groups:
-        queries.append(\
-            self.query(Client).join(File).join(People).\
-                  filter(People.protocol == 'train').\
+        if world_type == 'restricted':
+          queries.append(\
+              self.query(Client).join(File).join((Pair, or_(File.id == Pair.enrol_file_id, File.id == Pair.probe_file_id))).\
+                  filter(Pair.protocol == 'train').\
                   order_by(Client.id))
+        else:
+          queries.append(\
+              self.query(Client).join(File).join(People).\
+                    filter(People.protocol == 'train').\
+                    order_by(Client.id))
       if 'dev' in groups:
         queries.append(\
             self.query(Client).join(File).join(People).\
@@ -113,10 +127,16 @@ class Database(xbob.db.verification.utils.SQLiteDatabase):
       if 'world' in groups:
         # select training set for the given fold
         trainset = self.__world_for__(protocol, subworld)
-        queries.append(\
-            self.query(Client).join(File).join(People).\
-                  filter(People.protocol.in_(trainset)).\
+        if world_type == 'restricted':
+          queries.append(\
+              self.query(Client).join(File).join((Pair, or_(File.id == Pair.enrol_file_id, File.id == Pair.probe_file_id))).\
+                  filter(Pair.protocol.in_(trainset)).\
                   order_by(Client.id))
+        else:
+          queries.append(\
+              self.query(Client).join(File).join(People).\
+                    filter(People.protocol.in_(trainset)).\
+                    order_by(Client.id))
       if 'dev' in groups:
         # select development set for the given fold
         devset = self.__dev_for__(protocol)
@@ -139,10 +159,9 @@ class Database(xbob.db.verification.utils.SQLiteDatabase):
     return retval
 
 
-  def models(self, protocol=None, groups=None, subworld='sevenfolds'):
+  def models(self, protocol=None, groups=None):
     """Returns a list of File objects (there are multiple models per client) for the specific query by the user.
-    Note that for 'world' sets in the 'restricted' case, both images of the pairs are returned,
-    while for the 'dev' and 'eval' groups, only the first element of the pair is extracted.
+    For the 'dev' and 'eval' groups,  the first element of each pair is extracted.
 
     Keyword Parameters:
 
@@ -150,43 +169,26 @@ class Database(xbob.db.verification.utils.SQLiteDatabase):
       The protocol to consider; one of: ('view1', 'fold1', ..., 'fold10')
 
     groups
-      The groups to which the clients belong; one or several of: ('world', 'dev', 'eval')
+      The groups to which the clients belong; one or several of: ('dev', 'eval')
       The 'eval' group does not exist for protocol 'view1'.
-
-    subworld
-      The subset of the training data. Has to be specified if groups includes 'world'
-      and protocol is one of 'fold1', ..., 'fold10'.
-      It might be exactly one of ('onefolds', 'twofolds', ..., 'sevenfolds').
 
     Returns: A list containing all File objects which have the desired properties.
     """
 
     protocol = self.check_parameter_for_validity(protocol, 'protocol', self.m_valid_protocols)
-    groups = self.check_parameters_for_validity(groups, 'group', self.m_valid_groups)
-    if subworld is not None:
-      subworld = self.check_parameter_for_validity(subworld, 'sub-world', self.m_subworld_counts.keys())
+    groups = self.check_parameters_for_validity(groups, 'group', ('dev', 'eval'))
 
     # the restricted case...
     queries = []
 
     # List of the models
     if protocol == 'view1':
-      if 'world' in groups:
-        queries.append(\
-            self.query(File).join((Pair, or_(File.id == Pair.enrol_file_id, File.id == Pair.probe_file_id))).\
-                  filter(Pair.protocol == 'train'))
       if 'dev' in groups:
         queries.append(\
             # enroll files
             self.query(File).join((Pair, File.id == Pair.enrol_file_id)).\
                   filter(Pair.protocol == 'test'))
     else:
-      if 'world' in groups:
-        # select training set for the given fold
-        trainset = self.__world_for__(protocol, subworld)
-        queries.append(\
-            self.query(File).join((Pair, or_(File.id == Pair.enrol_file_id, File.id == Pair.probe_file_id))).\
-                  filter(Pair.protocol.in_(trainset)))
       if 'dev' in groups:
         # select development set for the given fold
         devset = self.__dev_for__(protocol)
@@ -206,10 +208,9 @@ class Database(xbob.db.verification.utils.SQLiteDatabase):
     return retval
 
 
-  def model_ids(self, protocol=None, groups=None, subworld='sevenfolds'):
+  def model_ids(self, protocol=None, groups=None):
     """Returns a list of model ids for the specific query by the user.
-    Note that for 'world' sets in the 'restricted' case, both images of the pairs are returned,
-    while for the 'dev' and 'eval' groups, only the first element of the pair is extracted.
+    For the 'dev' and 'eval' groups, the first element of each pair is extracted.
 
     Keyword Parameters:
 
@@ -217,17 +218,12 @@ class Database(xbob.db.verification.utils.SQLiteDatabase):
       The protocol to consider; one of: ('view1', 'fold1', ..., 'fold10')
 
     groups
-      The groups to which the clients belong; one or several of: ('world', 'dev', 'eval')
+      The groups to which the clients belong; one or several of: ('dev', 'eval')
       The 'eval' group does not exist for protocol 'view1'.
-
-    subworld
-      The subset of the training data. Has to be specified if groups includes 'world'
-      and protocol is one of 'fold1', ..., 'fold10'.
-      It might be exactly one of ('onefolds', 'twofolds', ..., 'sevenfolds').
 
     Returns: A list containing all model ids which have the desired properties.
     """
-    return [file.id for file in self.models(protocol,groups,subworld)]
+    return [file.id for file in self.models(protocol,groups)]
 
 
   def get_client_id_from_file_id(self, file_id):
