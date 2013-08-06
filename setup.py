@@ -10,7 +10,7 @@ from setuptools import setup, find_packages
 setup(
 
     name='xbob.db.lfw',
-    version='1.0.4',
+    version='1.0.5a0',
     description='Labeled Faces in the Wild Database Access API for Bob',
     url='http://github.com/bioidiap/xbob.db.lfw',
     license='GPLv3',
