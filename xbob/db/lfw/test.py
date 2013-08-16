@@ -103,14 +103,14 @@ class LfwDatabaseTest(unittest.TestCase):
     # Tests if the clients() and models() functions work as expected
     db = Database()
     # check the number of clients per protocol
-    for p,l in self.expected_clients.iteritems():
+    for p,l in self.expected_clients.items():
       self.assertEqual(len(db.clients(protocol=p, groups='world', world_type='unrestricted')), l[0])
       self.assertEqual(len(db.clients(protocol=p, groups='world', world_type='restricted')), l[1])
       self.assertEqual(len(db.clients(protocol=p, groups='dev')), l[2])
       self.assertEqual(len(db.clients(protocol=p, groups='eval')), l[3])
 
     # check the number of models per protocol
-    for p,l in self.expected_models.iteritems():
+    for p,l in self.expected_models.items():
       self.assertEqual(len(db.models(protocol=p, groups='dev')), l[0])
       self.assertEqual(len(db.models(protocol=p, groups='eval')), l[1])
 
@@ -119,21 +119,21 @@ class LfwDatabaseTest(unittest.TestCase):
     # Tests if the files() function returns the expected number and type of files
     db = Database()
     # check that the files() function returns the same number of elements as the models() function does
-    for p,l in self.expected_models.iteritems():
+    for p,l in self.expected_models.items():
       self.assertEqual(len(db.objects(protocol=p, groups='dev', purposes='enrol')), l[0])
       self.assertEqual(len(db.objects(protocol=p, groups='eval', purposes='enrol')), l[1])
 
     # check the number of probe files is correct
-    for p,l in self.expected_probes.iteritems():
+    for p,l in self.expected_probes.items():
       self.assertEqual(len(db.objects(protocol=p, groups='dev', purposes='probe')), l[0])
       self.assertEqual(len(db.objects(protocol=p, groups='eval', purposes='probe')), l[1])
 
     # also check that the training files in the restricted configuration fit
-    for p,l in self.expected_restricted_training_images.iteritems():
+    for p,l in self.expected_restricted_training_images.items():
       self.assertEqual(len(db.objects(protocol=p, groups='world', subworld='threefolds')), l)
 
     # check that the probe files sum up to 1000 (view1) or 600 (view2)
-    for p in self.expected_models.iterkeys():
+    for p in self.expected_models.keys():
       expected_probe_count = len(db.pairs(protocol=p, groups='dev'))
       # count the probes for each model
       current_probe_count = 0
@@ -162,7 +162,7 @@ class LfwDatabaseTest(unittest.TestCase):
     # Tests the unrestricted configuration
     db = Database()
     # check that the training files in the unrestricted configuration fit
-    for p,l in self.expected_unrestricted_training_images.iteritems():
+    for p,l in self.expected_unrestricted_training_images.items():
       self.assertEqual(len(db.objects(protocol=p, groups='world', world_type='unrestricted')), l)
       # for dev and eval, restricted and unrestricted should return the same number of files
       self.assertEqual(len(db.objects(protocol=p, groups='dev', purposes='enrol', world_type='unrestricted')), self.expected_models[p][0])

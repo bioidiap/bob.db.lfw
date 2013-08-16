@@ -48,16 +48,16 @@ def add_files(session, basedir, verbose):
     session.add(f)
 
   # Loops over the directory structure
-  if verbose: print "Adding clients and files ..."
+  if verbose: print("Adding clients and files ...")
   imagedir = os.path.join(basedir, 'all_images')
   for client_dir in filter(nodot, sorted([d for d in os.listdir(imagedir)])):
     # adds a client to the database
     client_name = add_client(session, client_dir)
-    if verbose>1: print "  Adding client '%s'" % client_name
+    if verbose>1: print("  Adding client '%s'" % client_name)
     for filename in filter(nodot, sorted([d for d in os.listdir(os.path.join(imagedir, client_dir))])):
       if filename.endswith('.jpg'):
         # adds a file to the database
-        if verbose>1: print "    Adding file '%s'" % filename
+        if verbose>1: print("    Adding file '%s'" % filename)
         add_file(session, filename)
 
 
@@ -67,7 +67,7 @@ def add_people(session, basedir, verbose):
   def add_client(session, protocol, client_id, count):
     """Adds all images of a client"""
     for i in range(1,count+1):
-      if verbose>1: print "  Adding file '%s' to protocol '%s'" % (File(client_id, i).id, protocol)
+      if verbose>1: print("  Adding file '%s' to protocol '%s'" % (File(client_id, i).id, protocol))
       session.add(People(protocol, File(client_id, i).id))
 
   def parse_view1(session, filename, protocol):
@@ -92,13 +92,13 @@ def add_people(session, basedir, verbose):
 
 
   # Adds view1 people
-  if verbose: print "Adding people from 'peopleDevTrain.txt' ..."
+  if verbose: print("Adding people from 'peopleDevTrain.txt' ...")
   parse_view1(session, os.path.join(basedir, 'view1', 'peopleDevTrain.txt'), 'train')
-  if verbose: print "Adding people from 'peopleDevTest.txt' ..."
+  if verbose: print("Adding people from 'peopleDevTest.txt' ...")
   parse_view1(session, os.path.join(basedir, 'view1', 'peopleDevTest.txt'), 'test')
 
   # Adds view2 people
-  if verbose: print "Adding people from 'people.txt' ..."
+  if verbose: print("Adding people from 'people.txt' ...")
   parse_view2(session, os.path.join(basedir, 'view2', 'people.txt'))
 
 def add_pairs(session, basedir, verbose):
@@ -120,40 +120,40 @@ def add_pairs(session, basedir, verbose):
       if len(llist) == 3: # Matched pair
         file_id1 = File(llist[0], int(llist[1])).id
         file_id2 = File(llist[0], int(llist[2])).id
-        if verbose>1: print "  Adding matching pair ('%s', '%s')" % (file_id1, file_id2)
+        if verbose>1: print("  Adding matching pair ('%s', '%s')" % (file_id1, file_id2))
         add_mpair(session, protocol, file_id1, file_id2)
       elif len(llist) == 4: # Unmatched pair
         file_id1 = File(llist[0], int(llist[1])).id
         file_id2 = File(llist[2], int(llist[3])).id
-        if verbose>1: print "  Adding unmatching pair ('%s', '%s')" % (file_id1, file_id2)
+        if verbose>1: print("  Adding unmatching pair ('%s', '%s')" % (file_id1, file_id2))
         add_upair(session, protocol, file_id1, file_id2)
 
   # Adds view1 pairs
-  if verbose: print "Adding pairs from 'pairsDevTrain.txt' ..."
+  if verbose: print("Adding pairs from 'pairsDevTrain.txt' ...")
   parse_file(session, os.path.join(basedir, 'view1', 'pairsDevTrain.txt'), 'train')
-  if verbose: print "Adding pairs from 'pairsDevTest.txt' ..."
+  if verbose: print("Adding pairs from 'pairsDevTest.txt' ...")
   parse_file(session, os.path.join(basedir, 'view1', 'pairsDevTest.txt'), 'test')
 
   # Adds view2 pairs
-  if verbose: print "Adding pairs from 'pairs_fold1.txt' ..."
+  if verbose: print("Adding pairs from 'pairs_fold1.txt' ...")
   parse_file(session, os.path.join(basedir, 'view2', 'pairs_fold1.txt'), 'fold1')
-  if verbose: print "Adding pairs from 'pairs_fold2.txt' ..."
+  if verbose: print("Adding pairs from 'pairs_fold2.txt' ...")
   parse_file(session, os.path.join(basedir, 'view2', 'pairs_fold2.txt'), 'fold2')
-  if verbose: print "Adding pairs from 'pairs_fold3.txt' ..."
+  if verbose: print("Adding pairs from 'pairs_fold3.txt' ...")
   parse_file(session, os.path.join(basedir, 'view2', 'pairs_fold3.txt'), 'fold3')
-  if verbose: print "Adding pairs from 'pairs_fold4.txt' ..."
+  if verbose: print("Adding pairs from 'pairs_fold4.txt' ...")
   parse_file(session, os.path.join(basedir, 'view2', 'pairs_fold4.txt'), 'fold4')
-  if verbose: print "Adding pairs from 'pairs_fold5.txt' ..."
+  if verbose: print("Adding pairs from 'pairs_fold5.txt' ...")
   parse_file(session, os.path.join(basedir, 'view2', 'pairs_fold5.txt'), 'fold5')
-  if verbose: print "Adding pairs from 'pairs_fold6.txt' ..."
+  if verbose: print("Adding pairs from 'pairs_fold6.txt' ...")
   parse_file(session, os.path.join(basedir, 'view2', 'pairs_fold6.txt'), 'fold6')
-  if verbose: print "Adding pairs from 'pairs_fold7.txt' ..."
+  if verbose: print("Adding pairs from 'pairs_fold7.txt' ...")
   parse_file(session, os.path.join(basedir, 'view2', 'pairs_fold7.txt'), 'fold7')
-  if verbose: print "Adding pairs from 'pairs_fold8.txt' ..."
+  if verbose: print("Adding pairs from 'pairs_fold8.txt' ...")
   parse_file(session, os.path.join(basedir, 'view2', 'pairs_fold8.txt'), 'fold8')
-  if verbose: print "Adding pairs from 'pairs_fold9.txt' ..."
+  if verbose: print("Adding pairs from 'pairs_fold9.txt' ...")
   parse_file(session, os.path.join(basedir, 'view2', 'pairs_fold9.txt'), 'fold9')
-  if verbose: print "Adding pairs from 'pairs_fold10.txt' ..."
+  if verbose: print("Adding pairs from 'pairs_fold10.txt' ...")
   parse_file(session, os.path.join(basedir, 'view2', 'pairs_fold10.txt'), 'fold10')
 
 

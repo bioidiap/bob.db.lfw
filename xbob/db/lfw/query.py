@@ -100,7 +100,7 @@ class Database(xbob.db.verification.utils.SQLiteDatabase):
     protocol = self.check_parameter_for_validity(protocol, 'protocol', self.m_valid_protocols)
     groups = self.check_parameters_for_validity(groups, 'group', self.m_valid_groups)
     if subworld != None:
-      subworld = self.check_parameter_for_validity(subworld, 'sub-world', self.m_subworld_counts.keys())
+      subworld = self.check_parameter_for_validity(subworld, 'sub-world', list(self.m_subworld_counts.keys()))
     world_type = self.check_parameter_for_validity(world_type, 'training type', self.m_valid_types)
 
     queries = []
@@ -303,9 +303,9 @@ class Database(xbob.db.verification.utils.SQLiteDatabase):
     world_type = self.check_parameter_for_validity(world_type, 'training type', self.m_valid_types)
 
     if subworld != None:
-      subworld = self.check_parameter_for_validity(subworld, 'sub-world', self.m_subworld_counts.keys())
+      subworld = self.check_parameter_for_validity(subworld, 'sub-world', list(self.m_subworld_counts.keys()))
 
-    if(isinstance(model_ids,(str,unicode))):
+    if(isinstance(model_ids,str)):
       model_ids = (model_ids,)
 
     queries = []
@@ -425,7 +425,7 @@ class Database(xbob.db.verification.utils.SQLiteDatabase):
     groups = self.check_parameters_for_validity(groups, "group", self.m_valid_groups)
     classes = self.check_parameters_for_validity(classes, "class", self.m_valid_classes)
     if subworld != None:
-      subworld = self.check_parameter_for_validity(subworld, 'sub-world', self.m_subworld_counts.keys())
+      subworld = self.check_parameter_for_validity(subworld, 'sub-world', list(self.m_subworld_counts.keys()))
 
     queries = []
     File1 = aliased(File)
