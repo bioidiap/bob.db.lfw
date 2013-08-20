@@ -21,6 +21,7 @@
 LFW database.
 """
 
+import six
 from bob.db import utils
 from .models import *
 from sqlalchemy.orm import aliased
@@ -305,7 +306,7 @@ class Database(xbob.db.verification.utils.SQLiteDatabase):
     if subworld != None:
       subworld = self.check_parameter_for_validity(subworld, 'sub-world', list(self.m_subworld_counts.keys()))
 
-    if(isinstance(model_ids,str)):
+    if(isinstance(model_ids,six.string_types)):
       model_ids = (model_ids,)
 
     queries = []
