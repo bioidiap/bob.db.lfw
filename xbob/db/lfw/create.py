@@ -67,8 +67,9 @@ def add_people(session, basedir, verbose):
   def add_client(session, protocol, client_id, count):
     """Adds all images of a client"""
     for i in range(1,count+1):
-      if verbose>1: print("  Adding file '%s' to protocol '%s'" % (File(client_id, i).id, protocol))
-      session.add(People(protocol, File(client_id, i).id))
+      if verbose>1: print("  Adding file '%s' to protocol '%s'" % (filename(client_id, i), protocol))
+      file_id = session.query(File).filter(File.name == filename(client_id, i)).first().id
+      session.add(People(protocol, file_id))
 
   def parse_view1(session, filename, protocol):
     """Parses a file containing the people of view 1 of the LFW database"""
@@ -112,22 +113,24 @@ def add_pairs(session, basedir, verbose):
     """Add an unmatched pair to the LFW database."""
     session.add(Pair(protocol, file_id1, file_id2, False))
 
-  def parse_file(session, filename, protocol):
+  def parse_file(session, list_filename, protocol):
     """Parses a file containing pairs and adds them to the LFW database"""
-    pfile = open(filename)
+    pfile = open(list_filename)
     for line in pfile:
       llist = line.split()
       if len(llist) == 3: # Matched pair
-        file_id1 = File(llist[0], int(llist[1])).id
-        file_id2 = File(llist[0], int(llist[2])).id
+        file_id1 = session.query(File).filter(File.name == filename(llist[0], int(llist[1]))).first().id
+        file_id2 = session.query(File).filter(File.name == filename(llist[0], int(llist[2]))).first().id
         if verbose>1: print("  Adding matching pair ('%s', '%s')" % (file_id1, file_id2))
         add_mpair(session, protocol, file_id1, file_id2)
       elif len(llist) == 4: # Unmatched pair
-        file_id1 = File(llist[0], int(llist[1])).id
-        file_id2 = File(llist[2], int(llist[3])).id
+        file_id1 = session.query(File).filter(File.name == filename(llist[0], int(llist[1]))).first().id
+        file_id2 = session.query(File).filter(File.name == filename(llist[2], int(llist[3]))).first().id
         if verbose>1: print("  Adding unmatching pair ('%s', '%s')" % (file_id1, file_id2))
         add_upair(session, protocol, file_id1, file_id2)
 
+  # flush session so that we get file ids
+  session.flush()
   # Adds view1 pairs
   if verbose: print("Adding pairs from 'pairsDevTrain.txt' ...")
   parse_file(session, os.path.join(basedir, 'view1', 'pairsDevTrain.txt'), 'train')
@@ -157,6 +160,25 @@ def add_pairs(session, basedir, verbose):
   parse_file(session, os.path.join(basedir, 'view2', 'pairs_fold10.txt'), 'fold10')
 
 
+def add_annotations(session, annotation_directory, annotation_extension, annotation_type, verbose):
+  """Adds annotations of the given type from the given source directory."""
+  session.flush()
+  # get all files
+  files = session.query(File)
+  if verbose: print("Adding annotations of type '%s' from directory '%s'" % (annotation_type, annotation_directory))
+  for file in files:
+    # read annotations
+    annotation_file = file.make_path(annotation_directory, annotation_extension)
+    if not os.path.exists(annotation_file):
+      if verbose: print("WARNING: Skipping non-existing annotation file '%s'" % annotation_file)
+      continue
+
+    if verbose>1: print("  Adding annotation file '%s'" % annotation_file)
+    annotation_file_content = open(annotation_file).read()
+    # add annotations to the session
+    session.add(Annotation(file.id, annotation_type, annotation_file_content))
+
+
 def create_tables(args):
   """Creates all necessary tables (only to be used at the first time)"""
 
@@ -167,6 +189,7 @@ def create_tables(args):
   File.metadata.create_all(engine)
   People.metadata.create_all(engine)
   Pair.metadata.create_all(engine)
+  Annotation.metadata.create_all(engine)
 
 # Driver API
 # ==========
@@ -192,6 +215,11 @@ def create(args):
   add_files(s, args.basedir, args.verbose)
   add_people(s, args.basedir, args.verbose)
   add_pairs(s, args.basedir, args.verbose)
+  if 'idiap' in args.annotation_types:
+    add_annotations(s, args.idiap_annotation_dir, '.pos', 'idiap', args.verbose)
+  if 'funneled' in args.annotation_types:
+    add_annotations(s, args.funneled_annotation_dir, '.jpg.pts', 'funneled', args.verbose)
+
   s.commit()
   s.close()
 
@@ -203,5 +231,8 @@ def add_command(subparsers):
   parser.add_argument('-R', '--recreate', action='store_true', help='If set, I\'ll first erase the current database')
   parser.add_argument('-v', '--verbose', action='count', help='Do SQL operations in a verbose way?')
   parser.add_argument('-D', '--basedir', metavar='DIR', default='/idiap/resource/database/lfw', help='Change the relative path to the directory containing the images of the LFW database.')
+  parser.add_argument('-F', '--funneled-annotation-dir', default='/idiap/group/biometric/annotations/lfw/funneled/lfw_funneled', help="Set the directory, where the funneled annotations for LFW images can be found")
+  parser.add_argument('-I', '--idiap-annotation-dir', help="Set the directory, where Idiap's annotations for LFW images can be found")
+  parser.add_argument('-a', '--annotation-types', nargs='*', choices=('idiap', 'funneled'), default=['funneled'], help='Choose, which kinds of annotations should be added to the database. Please note that the "idiap" annotations cannot be distributed outside Idiap.')
 
   parser.set_defaults(func=create) #action

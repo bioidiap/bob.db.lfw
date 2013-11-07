@@ -46,12 +46,73 @@ class Client(Base):
     return "<Client('%s')>" % self.id
 
 
+class Annotation(Base):
+  __tablename__ = 'annotation'
+
+  annotation_type_choices = ('funneled', 'idiap')
+
+  id = Column(Integer, primary_key=True)
+  file_id = Column(Integer, ForeignKey('file.id'))
+  annotation_type = Column(Enum(*annotation_type_choices))
+  annotations = Column(String(500))
+
+  def __init__(self, file_id, annotation_type, annotations):
+    self.file_id = file_id
+    assert annotation_type in self.annotation_type_choices
+    self.annotation_type = annotation_type
+    self.annotations = annotations
+
+
+  def _extract_funneled(self):
+    """Interprets the annotation string as if it came from the funneled images."""
+    splits = self.annotations.rstrip().split()
+    assert len(splits) == 18
+    locations = ['reyeo', 'reyei', 'leyei', 'leyeo', 'noser', 'noset', 'nosel', 'mouthr', 'mouthl']
+    annotations = dict([(locations[i], (float(splits[2*i+1]), float(splits[2*i]))) for i in range(9)])
+    # add eye center annotations as the center between the eye corners
+    annotations['leye'] = ((annotations['leyei'][0] + annotations['leyeo'][0])/2., (annotations['leyei'][1] + annotations['leyeo'][1])/2.)
+    annotations['reye'] = ((annotations['reyei'][0] + annotations['reyeo'][0])/2., (annotations['reyei'][1] + annotations['reyeo'][1])/2.)
+
+    return annotations
+
+  def _extract_idiap(self):
+    """Interprets the annotation string as if it came from the Idiap annotations."""
+    lines = self.annotations.rstrip().split('\n')
+    annotations = {}
+    for line in lines:
+      splits = line.rstrip().split()
+      if len(splits) == 2:
+        # keyword annotation
+        annotations[splits[0]] = splits[1]
+      elif len(splits) == 3:
+        # location annotation
+        annotations[int(splits[0])] = (int(splits[2]), int(splits[1]))
+    if 3 in annotations:
+      annotations['reye'] = annotations[3]
+    if 8 in annotations:
+      annotations['leye'] = annotations[8]
+
+    return annotations
+
+  def __call__(self):
+    """Interprets the annotation string and return a dictionary from location to (y,x), e.g. {'reye':(re_y, re_x), 'leye':(le_y,le_x)}"""
+    if self.annotation_type == 'funneled':
+      return self._extract_funneled()
+    else:
+      return self._extract_idiap()
+
+
+def filename(client_id, shot_id):
+  return client_id + "_" + "0"*(4-len(str(shot_id))) + str(shot_id)
+
 class File(Base, xbob.db.verification.utils.File):
   """Information about the files of the LFW database."""
   __tablename__ = 'file'
 
   # Unique key identifier for the file; here we use strings
-  id = Column(String(100), primary_key=True)
+  id = Column(Integer, primary_key=True)
+  # Unique name identifier for the file
+  name = Column(String(100), unique=True)
   # Identifier for the client
   client_id = Column(String(100), ForeignKey('client.id'))
   # Unique path to this file inside the database
@@ -61,13 +122,17 @@ class File(Base, xbob.db.verification.utils.File):
 
   # a back-reference from file to client
   client = relationship("Client", backref=backref("files", order_by=id))
+  # many-to-one relationship between annotations and files
+  annotations = relationship("Annotation", backref=backref("file", order_by=id, uselist=False))
 
   def __init__(self, client_id, shot_id):
     # call base class constructor
-    file_id = client_id + "_" + "0"*(4-len(str(shot_id))) + str(shot_id)
-    xbob.db.verification.utils.File.__init__(self, client_id = client_id, file_id = file_id, path = os.path.join(client_id, file_id))
+    fn = filename(client_id, shot_id)
+    xbob.db.verification.utils.File.__init__(self, client_id = client_id, path = os.path.join(client_id, fn))
 
     self.shot_id = shot_id
+    self.name = fn
+
 
 
 class People(Base):

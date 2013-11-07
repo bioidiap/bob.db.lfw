@@ -38,7 +38,7 @@ class Database(xbob.db.verification.utils.SQLiteDatabase):
   and for the data itself inside the database.
   """
 
-  def __init__(self):
+  def __init__(self, annotation_type = None):
     # call base class constructor
     xbob.db.verification.utils.SQLiteDatabase.__init__(self, SQLITE_FILE, File)
 
@@ -48,6 +48,12 @@ class Database(xbob.db.verification.utils.SQLiteDatabase):
     self.m_valid_classes = ('client', 'impostor') # 'matched' and 'unmatched'
     self.m_subworld_counts = {'onefolds':1, 'twofolds':2, 'threefolds':3, 'fourfolds':4, 'fivefolds':5, 'sixfolds':6, 'sevenfolds':7}
     self.m_valid_types = ('restricted', 'unrestricted')
+
+    self.m_valid_annotation_types = ('idiap', 'funneled')
+    if annotation_type is not None:
+      self.m_annotation_type = self.check_parameter_for_validity(annotation_type, "annotation type", self.m_valid_annotation_types)
+    else:
+      self.m_annotation_type = None
 
 
   def __eval__(self, fold):
@@ -72,13 +78,41 @@ class Database(xbob.db.verification.utils.SQLiteDatabase):
     return ["fold%d"%f for f in world]
 
 
+  def protocol_names(self):
+    """Returns the names of the valid protocols."""
+    return self.m_valid_protocols
+
+  def groups(self, protocol=None):
+    """Returns the groups, which are available in the database."""
+    if protocol != 'view1':
+      return self.m_valid_groups
+    else:
+      return self.m_valid_groups[:2]
+
+  def subworld_names(self, protocol=None):
+    """Returns all valid sub-worlds for the fold.. protocols; for view1 an empty list is returned."""
+    if protocol != 'view1':
+      return self.m_subworld_counts.keys()
+    else:
+      return []
+
+  def world_types(self):
+    """Returns the valid types of worlds: ('restricted', 'unrestricted')."""
+    return self.m_valid_types
+
+  def annotation_types(self):
+    """Queries the database for the available types of annotations."""
+    s = set([a.annotation_type for a in self.query(Annotation)])
+    return [str(t) for t in s]
+
+
   def clients(self, protocol=None, groups=None, subworld='sevenfolds', world_type='restricted'):
     """Returns a list of Client objects for the specific query by the user.
 
     Keyword Parameters:
 
     protocol
-      The protocol to consider; one of: ('view1', 'fold1', ..., 'fold10')
+      The protocol to consider; one of: ('view1', 'fold1', ..., 'fold10'), or None
 
     groups
       The groups to which the clients belong; one or several of: ('world', 'dev', 'eval')
@@ -98,7 +132,7 @@ class Database(xbob.db.verification.utils.SQLiteDatabase):
 
     Returns: A list containing all Client objects which have the desired properties.
     """
-    protocol = self.check_parameter_for_validity(protocol, 'protocol', self.m_valid_protocols)
+    protocols = self.check_parameters_for_validity(protocol, 'protocol', self.m_valid_protocols)
     groups = self.check_parameters_for_validity(groups, 'group', self.m_valid_groups)
     if subworld != None:
       subworld = self.check_parameter_for_validity(subworld, 'sub-world', list(self.m_subworld_counts.keys()))
@@ -107,49 +141,50 @@ class Database(xbob.db.verification.utils.SQLiteDatabase):
     queries = []
 
     # List of the clients
-    if protocol == 'view1':
-      if 'world' in groups:
-        if world_type == 'restricted':
-          queries.append(\
-              self.query(Client).join(File).join((Pair, or_(File.id == Pair.enrol_file_id, File.id == Pair.probe_file_id))).\
-                  filter(Pair.protocol == 'train').\
-                  order_by(Client.id))
-        else:
+    for protocol in protocols:
+      if protocol == 'view1':
+        if 'world' in groups:
+          if world_type == 'restricted':
+            queries.append(\
+                self.query(Client).join(File).join((Pair, or_(File.id == Pair.enrol_file_id, File.id == Pair.probe_file_id))).\
+                    filter(Pair.protocol == 'train').\
+                    order_by(Client.id))
+          else:
+            queries.append(\
+                self.query(Client).join(File).join(People).\
+                      filter(People.protocol == 'train').\
+                      order_by(Client.id))
+        if 'dev' in groups:
           queries.append(\
               self.query(Client).join(File).join(People).\
-                    filter(People.protocol == 'train').\
+                    filter(People.protocol == 'test').\
                     order_by(Client.id))
-      if 'dev' in groups:
-        queries.append(\
-            self.query(Client).join(File).join(People).\
-                  filter(People.protocol == 'test').\
-                  order_by(Client.id))
-    else:
-      if 'world' in groups:
-        # select training set for the given fold
-        trainset = self.__world_for__(protocol, subworld)
-        if world_type == 'restricted':
-          queries.append(\
-              self.query(Client).join(File).join((Pair, or_(File.id == Pair.enrol_file_id, File.id == Pair.probe_file_id))).\
-                  filter(Pair.protocol.in_(trainset)).\
-                  order_by(Client.id))
-        else:
+      else:
+        if 'world' in groups:
+          # select training set for the given fold
+          trainset = self.__world_for__(protocol, subworld)
+          if world_type == 'restricted':
+            queries.append(\
+                self.query(Client).join(File).join((Pair, or_(File.id == Pair.enrol_file_id, File.id == Pair.probe_file_id))).\
+                    filter(Pair.protocol.in_(trainset)).\
+                    order_by(Client.id))
+          else:
+            queries.append(\
+                self.query(Client).join(File).join(People).\
+                      filter(People.protocol.in_(trainset)).\
+                      order_by(Client.id))
+        if 'dev' in groups:
+          # select development set for the given fold
+          devset = self.__dev_for__(protocol)
           queries.append(\
               self.query(Client).join(File).join(People).\
-                    filter(People.protocol.in_(trainset)).\
+                    filter(People.protocol.in_(devset)).\
                     order_by(Client.id))
-      if 'dev' in groups:
-        # select development set for the given fold
-        devset = self.__dev_for__(protocol)
-        queries.append(\
-            self.query(Client).join(File).join(People).\
-                  filter(People.protocol.in_(devset)).\
-                  order_by(Client.id))
-      if 'eval' in groups:
-        queries.append(\
-            self.query(Client).join(File).join(People).\
-                  filter(People.protocol == protocol).\
-                  order_by(Client.id))
+        if 'eval' in groups:
+          queries.append(\
+              self.query(Client).join(File).join(People).\
+                    filter(People.protocol == protocol).\
+                    order_by(Client.id))
 
     # all queries are made; now collect the clients
     retval = []
@@ -167,7 +202,7 @@ class Database(xbob.db.verification.utils.SQLiteDatabase):
     Keyword Parameters:
 
     protocol
-      The protocol to consider; one of: ('view1', 'fold1', ..., 'fold10')
+      The protocol to consider; one of: ('view1', 'fold1', ..., 'fold10'), or None
 
     groups
       The groups to which the clients belong; one or several of: ('dev', 'eval')
@@ -176,30 +211,31 @@ class Database(xbob.db.verification.utils.SQLiteDatabase):
     Returns: A list containing all File objects which have the desired properties.
     """
 
-    protocol = self.check_parameter_for_validity(protocol, 'protocol', self.m_valid_protocols)
+    protocols = self.check_parameters_for_validity(protocol, 'protocol', self.m_valid_protocols)
     groups = self.check_parameters_for_validity(groups, 'group', ('dev', 'eval'))
 
     # the restricted case...
     queries = []
 
     # List of the models
-    if protocol == 'view1':
-      if 'dev' in groups:
-        queries.append(\
-            # enroll files
-            self.query(File).join((Pair, File.id == Pair.enrol_file_id)).\
-                  filter(Pair.protocol == 'test'))
-    else:
-      if 'dev' in groups:
-        # select development set for the given fold
-        devset = self.__dev_for__(protocol)
-        queries.append(\
-            self.query(File).join((Pair, File.id == Pair.enrol_file_id)).\
-                  filter(Pair.protocol.in_(devset)))
-      if 'eval' in groups:
-        queries.append(\
-            self.query(File).join((Pair, File.id == Pair.enrol_file_id)).\
-                  filter(Pair.protocol == protocol))
+    for protocol in protocols:
+      if protocol == 'view1':
+        if 'dev' in groups:
+          queries.append(\
+              # enroll files
+              self.query(File).join((Pair, File.id == Pair.enrol_file_id)).\
+                    filter(Pair.protocol == 'test'))
+      else:
+        if 'dev' in groups:
+          # select development set for the given fold
+          devset = self.__dev_for__(protocol)
+          queries.append(\
+              self.query(File).join((Pair, File.id == Pair.enrol_file_id)).\
+                    filter(Pair.protocol.in_(devset)))
+        if 'eval' in groups:
+          queries.append(\
+              self.query(File).join((Pair, File.id == Pair.enrol_file_id)).\
+                    filter(Pair.protocol == protocol))
 
     # all queries are made; now collect the files
     retval = []
@@ -216,7 +252,7 @@ class Database(xbob.db.verification.utils.SQLiteDatabase):
     Keyword Parameters:
 
     protocol
-      The protocol to consider; one of: ('view1', 'fold1', ..., 'fold10')
+      The protocol to consider; one of: ('view1', 'fold1', ..., 'fold10'), or None
 
     groups
       The groups to which the clients belong; one or several of: ('dev', 'eval')
@@ -272,7 +308,7 @@ class Database(xbob.db.verification.utils.SQLiteDatabase):
     Keyword Parameters:
 
     protocol
-      The protocol to consider ('view1', 'fold1', ..., 'fold10')
+      The protocol to consider ('view1', 'fold1', ..., 'fold10'), or None
 
     groups
       The groups to which the objects belong ('world', 'dev', 'eval')
@@ -298,7 +334,7 @@ class Database(xbob.db.verification.utils.SQLiteDatabase):
     Returns: A list of File objects considering all the filtering criteria.
     """
 
-    protocol = self.check_parameter_for_validity(protocol, "protocol", self.m_valid_protocols)
+    protocols = self.check_parameters_for_validity(protocol, "protocol", self.m_valid_protocols)
     groups = self.check_parameters_for_validity(groups, "group", self.m_valid_groups)
     purposes = self.check_parameters_for_validity(purposes, "purpose", self.m_valid_purposes)
     world_type = self.check_parameter_for_validity(world_type, 'training type', self.m_valid_types)
@@ -313,70 +349,71 @@ class Database(xbob.db.verification.utils.SQLiteDatabase):
     probe_queries = []
     file_alias = aliased(File)
 
-    if protocol == 'view1':
-      if 'world' in groups:
-        # training files of view1
-        if world_type == 'restricted':
-          queries.append(\
-              self.query(File).join((Pair, or_(File.id == Pair.enrol_file_id, File.id == Pair.probe_file_id))).\
-                  filter(Pair.protocol == 'train'))
-        else:
-          queries.append(\
-              self.query(File).join(People).\
-                  filter(People.protocol == 'train'))
-      if 'dev' in groups:
-        # test files of view1
-        if 'enrol' in purposes:
-          queries.append(\
-              self.query(File).join((Pair, File.id == Pair.enrol_file_id)).\
-                  filter(Pair.protocol == 'test'))
-        if 'probe' in purposes:
-          probe_queries.append(\
-              self.query(File).\
-                  join((Pair, File.id == Pair.probe_file_id)).\
-                  join((file_alias, Pair.enrol_file_id == file_alias.id)).\
-                  filter(Pair.protocol == 'test'))
+    for protocol in protocols:
+      if protocol == 'view1':
+        if 'world' in groups:
+          # training files of view1
+          if world_type == 'restricted':
+            queries.append(\
+                self.query(File).join((Pair, or_(File.id == Pair.enrol_file_id, File.id == Pair.probe_file_id))).\
+                    filter(Pair.protocol == 'train'))
+          else:
+            queries.append(\
+                self.query(File).join(People).\
+                    filter(People.protocol == 'train'))
+        if 'dev' in groups:
+          # test files of view1
+          if 'enrol' in purposes:
+            queries.append(\
+                self.query(File).join((Pair, File.id == Pair.enrol_file_id)).\
+                    filter(Pair.protocol == 'test'))
+          if 'probe' in purposes:
+            probe_queries.append(\
+                self.query(File).\
+                    join((Pair, File.id == Pair.probe_file_id)).\
+                    join((file_alias, Pair.enrol_file_id == file_alias.id)).\
+                    filter(Pair.protocol == 'test'))
 
-    else:
-      # view 2
-      if 'world' in groups:
-        # world set of current fold of view 2
-        trainset = self.__world_for__(protocol, subworld)
-        if world_type == 'restricted':
-          queries.append(\
-              self.query(File).join((Pair, or_(File.id == Pair.enrol_file_id, File.id == Pair.probe_file_id))).\
-                  filter(Pair.protocol.in_(trainset)))
-        else:
-          queries.append(\
-              self.query(File).join(People).\
-                  filter(People.protocol.in_(trainset)))
+      else:
+        # view 2
+        if 'world' in groups:
+          # world set of current fold of view 2
+          trainset = self.__world_for__(protocol, subworld)
+          if world_type == 'restricted':
+            queries.append(\
+                self.query(File).join((Pair, or_(File.id == Pair.enrol_file_id, File.id == Pair.probe_file_id))).\
+                    filter(Pair.protocol.in_(trainset)))
+          else:
+            queries.append(\
+                self.query(File).join(People).\
+                    filter(People.protocol.in_(trainset)))
 
-      if 'dev' in groups:
-        # development set of current fold of view 2
-        devset = self.__dev_for__(protocol)
-        if 'enrol' in purposes:
-          queries.append(\
-              self.query(File).join((Pair, File.id == Pair.enrol_file_id)).\
-                  filter(Pair.protocol.in_(devset)))
-        if 'probe' in purposes:
-          probe_queries.append(\
-              self.query(File).\
-                  join((Pair, File.id == Pair.probe_file_id)).\
-                  join((file_alias, file_alias.id == Pair.enrol_file_id)).\
-                  filter(Pair.protocol.in_(devset)))
+        if 'dev' in groups:
+          # development set of current fold of view 2
+          devset = self.__dev_for__(protocol)
+          if 'enrol' in purposes:
+            queries.append(\
+                self.query(File).join((Pair, File.id == Pair.enrol_file_id)).\
+                    filter(Pair.protocol.in_(devset)))
+          if 'probe' in purposes:
+            probe_queries.append(\
+                self.query(File).\
+                    join((Pair, File.id == Pair.probe_file_id)).\
+                    join((file_alias, file_alias.id == Pair.enrol_file_id)).\
+                    filter(Pair.protocol.in_(devset)))
 
-      if 'eval' in groups:
-        # evaluation set of current fold of view 2; this is the REAL fold
-        if 'enrol' in purposes:
-          queries.append(\
-              self.query(File).join((Pair, File.id == Pair.enrol_file_id)).\
-                  filter(Pair.protocol == protocol))
-        if 'probe' in purposes:
-          probe_queries.append(\
-              self.query(File).\
-                  join((Pair, File.id == Pair.probe_file_id)).\
-                  join((file_alias, file_alias.id == Pair.enrol_file_id)).\
-                  filter(Pair.protocol == protocol))
+        if 'eval' in groups:
+          # evaluation set of current fold of view 2; this is the REAL fold
+          if 'enrol' in purposes:
+            queries.append(\
+                self.query(File).join((Pair, File.id == Pair.enrol_file_id)).\
+                    filter(Pair.protocol == protocol))
+          if 'probe' in purposes:
+            probe_queries.append(\
+                self.query(File).\
+                    join((Pair, File.id == Pair.probe_file_id)).\
+                    join((file_alias, file_alias.id == Pair.enrol_file_id)).\
+                    filter(Pair.protocol == protocol))
 
     retval = []
     for query in queries:
@@ -459,5 +496,30 @@ class Database(xbob.db.verification.utils.SQLiteDatabase):
         retval.append(pair)
 
     return retval
+
+  def annotations(self, file_id, annotation_type=None):
+    """Returns the annotations for the given file id as a dictionary, e.g. {'reye':(y,x), 'leye':(y,x)}.
+
+    Keyword parameters:
+
+    file_id
+      The id of the file for which you want to retrieve the annotations
+
+    annotation_type
+      The type of annotations ('idiap', 'funneled').
+      If not specified, and if not given in the constructor, all annotations are taken, which might to cause an assertion error.
+    """
+    self.assert_validity()
+    if annotation_type is None:
+      annotation_type = self.m_annotation_type
+
+    annotation_type = self.check_parameters_for_validity(annotation_type, "annotation type", self.m_valid_annotation_types)
+
+    query = self.query(Annotation).filter(Annotation.annotation_type.in_(annotation_type)).join(File).filter(File.id==file_id)
+    assert query.count() == 1
+    annotation = query.first()
+
+    # return the annotations as returned by the call function of the Annotation object
+    return annotation()
 
 

@@ -21,6 +21,7 @@
 
 import os, sys
 import unittest
+import random
 from .query import Database
 
 class LfwDatabaseTest(unittest.TestCase):
@@ -171,7 +172,25 @@ class LfwDatabaseTest(unittest.TestCase):
       self.assertEqual(len(db.objects(protocol=p, groups='eval', purposes='probe', world_type='unrestricted')), self.expected_probes[p][1])
 
 
-  def test05_driver_api(self):
+  def test05_annotations(self):
+    # Tests the unrestricted configuration
+    db = Database()
+    # get all files
+    files = random.sample(list(db.objects()), 1000) # if the random sampling fails, please remove it to get all files checked.
+    # iterate over all files
+    for annotation_type in db.annotation_types():
+      for file in files:
+        annotations = db.annotations(file.id, annotation_type)
+        if annotation_type == 'funneled':
+          self.assertTrue('leye' in annotations and 'reye' in annotations)
+        if 'leye' in annotations:
+           self.assertEqual(len(annotations['leye']), 2)
+        if 'reye' in annotations:
+          self.assertEqual(len(annotations['reye']), 2)
+
+
+
+  def test06_driver_api(self):
     from bob.db.script.dbmanage import main
     self.assertEqual(main('lfw dumplist --self-test'.split()), 0)
     self.assertEqual(main('lfw dumplist --protocol=fold8 --group=dev --purpose=enrol --self-test'.split()), 0)
@@ -179,5 +198,6 @@ class LfwDatabaseTest(unittest.TestCase):
     self.assertEqual(main('lfw dumppairs --protocol=fold8 --group=dev --class=client --self-test'.split()), 0)
     self.assertEqual(main('lfw checkfiles --self-test'.split()), 0)
     self.assertEqual(main('lfw reverse Thomas_Watjen/Thomas_Watjen_0001 --self-test'.split()), 0)
-    self.assertEqual(main('lfw path Thomas_Watjen_0001 --self-test'.split()), 0)
+    self.assertEqual(main('lfw annotations 1437 --self-test'.split()), 0)
+    self.assertEqual(main('lfw path 1437 --self-test'.split()), 0)
 

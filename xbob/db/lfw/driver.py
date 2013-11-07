@@ -103,6 +103,24 @@ def checkfiles(args):
 
   return 0
 
+def annotations(args):
+  """Returns a list of file database identifiers given the path stems"""
+
+  from .query import Database
+  db = Database(args.annotation_type)
+
+  output = sys.stdout
+  if args.selftest:
+    from bob.db.utils import null
+    output = null()
+
+  a = db.annotations(args.id)
+  for f in a: output.write('%s : (%3.2f, %3.2f)\n' % (f, a[f][0], a[f][1]))
+
+  if not a: return 1
+
+  return 0
+
 def reverse(args):
   """Returns a list of file database identifiers given the path stems"""
 
@@ -201,6 +219,13 @@ class Interface(BaseInterface):
     parser.add_argument('--self-test', dest="selftest", action='store_true', help=argparse.SUPPRESS)
     parser.set_defaults(func=checkfiles) #action
 
+    # adds the "annotations" command
+    parser = subparsers.add_parser('annotations', help=reverse.__doc__)
+    parser.add_argument('id', type=int, help="The File id for which to retrieve the annotations.")
+    parser.add_argument('-a', '--annotation-type', choices=('idiap', 'funneled'), default='funneled', help='Choose, which kind of annotations should be retrieved.')
+    parser.add_argument('--self-test', dest="selftest", action='store_true', help=argparse.SUPPRESS)
+    parser.set_defaults(func=annotations) #action
+
     # adds the "reverse" command
     parser = subparsers.add_parser('reverse', help=reverse.__doc__)
     parser.add_argument('path', nargs='+', help="one or more path stems to look up. If you provide more than one, files which cannot be reversed will be omitted from the output.")
@@ -211,7 +236,7 @@ class Interface(BaseInterface):
     parser = subparsers.add_parser('path', help=path.__doc__)
     parser.add_argument('-d', '--directory', default='', help="if given, this path will be prepended to every entry returned.")
     parser.add_argument('-e', '--extension', default='', help="if given, this extension will be appended to every entry returned.")
-    parser.add_argument('id', nargs='+', help="one or more file ids to look up. If you provide more than one, files which cannot be found will be omitted from the output. If you provide a single id to lookup, an error message will be printed if the id does not exist in the database. The exit status will be non-zero in such case.")
+    parser.add_argument('id', nargs='+', type=int, help="one or more file ids to look up. If you provide more than one, files which cannot be found will be omitted from the output. If you provide a single id to lookup, an error message will be printed if the id does not exist in the database. The exit status will be non-zero in such case.")
     parser.add_argument('--self-test', dest="selftest", action='store_true', help=argparse.SUPPRESS)
     parser.set_defaults(func=path) #action
 

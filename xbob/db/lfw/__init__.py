@@ -51,6 +51,18 @@ If you want to stick to the original protocol and use only the pairs for trainin
 .. note::
   The pairs that are provided using the ``pairs`` function, and the files provided by the ``objects`` function (see note above) correspond to the identical model/probe pairs.
   Hence, either of the two approaches should give the same recognition results.
+
+The database comes with automatically detected annotations of several landmarks, which are provided by:
+http://lear.inrialpes.fr/people/guillaumin/data.php.
+To be consistent with our other image databases, we added the eye center coordinates ``'leye'`` and ``'reye'`` automatically by averaging between the eye corners of the accorsing eyes.
+
+.. warning::
+  The annotations are provided for the ``funneled`` images (**not the deep funneled ones**), which can be downloaded from http://vis-www.cs.umass.edu/lfw as well.
+  For the original LFW images, these annotations won't work.
+
+.. note::
+  There is also the possibility to include other annotations into the database.
+  Currently, including annotations from Idiap is implemented (but they are not included in the PyPI package).
 """
 
 from .query import Database
