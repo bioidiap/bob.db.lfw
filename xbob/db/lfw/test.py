@@ -119,6 +119,11 @@ class LfwDatabaseTest(unittest.TestCase):
   def test02_objects(self):
     # Tests if the files() function returns the expected number and type of files
     db = Database()
+
+    # first, count all objects
+    self.assertEqual(len(db.objects()), 13233)
+    self.assertEqual(len(db.objects(world_type='restricted')), 9056)
+
     # check that the files() function returns the same number of elements as the models() function does
     for p,l in self.expected_models.items():
       self.assertEqual(len(db.objects(protocol=p, groups='dev', purposes='enrol')), l[0])
@@ -129,9 +134,13 @@ class LfwDatabaseTest(unittest.TestCase):
       self.assertEqual(len(db.objects(protocol=p, groups='dev', purposes='probe')), l[0])
       self.assertEqual(len(db.objects(protocol=p, groups='eval', purposes='probe')), l[1])
 
-    # also check that the training files in the restricted configuration fit
+    # check that the training files in the restricted configuration fit
     for p,l in self.expected_restricted_training_images.items():
-      self.assertEqual(len(db.objects(protocol=p, groups='world', subworld='threefolds')), l)
+      self.assertEqual(len(db.objects(protocol=p, groups='world', world_type='restricted', subworld='threefolds')), l)
+
+    # also check that the training files in the unrestricted configuration fit
+    for p,l in self.expected_unrestricted_training_images.items():
+      self.assertEqual(len(db.objects(protocol=p, groups='world', world_type='unrestricted', subworld='sevenfolds')), l)
 
     # check that the probe files sum up to 1000 (view1) or 600 (view2)
     for p in self.expected_models.keys():

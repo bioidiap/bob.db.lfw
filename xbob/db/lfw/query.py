@@ -106,7 +106,7 @@ class Database(xbob.db.verification.utils.SQLiteDatabase):
     return [str(t) for t in s]
 
 
-  def clients(self, protocol=None, groups=None, subworld='sevenfolds', world_type='restricted'):
+  def clients(self, protocol=None, groups=None, subworld='sevenfolds', world_type='unrestricted'):
     """Returns a list of Client objects for the specific query by the user.
 
     Keyword Parameters:
@@ -192,7 +192,7 @@ class Database(xbob.db.verification.utils.SQLiteDatabase):
       for client in query:
         retval.append(client)
 
-    return retval
+    return self.uniquify(retval)
 
 
   def models(self, protocol=None, groups=None):
@@ -242,7 +242,7 @@ class Database(xbob.db.verification.utils.SQLiteDatabase):
     for query in queries:
       retval.extend([file for file in query])
 
-    return retval
+    return self.uniquify(retval)
 
 
   def model_ids(self, protocol=None, groups=None):
@@ -302,7 +302,7 @@ class Database(xbob.db.verification.utils.SQLiteDatabase):
     return self.get_client_id_from_file_id(model_id)
 
 
-  def objects(self, protocol=None, model_ids=None, groups=None, purposes=None, subworld='sevenfolds', world_type='restricted'):
+  def objects(self, protocol=None, model_ids=None, groups=None, purposes=None, subworld='sevenfolds', world_type='unrestricted'):
     """Returns a list of File objects for the specific query by the user.
 
     Keyword Parameters:
@@ -429,7 +429,7 @@ class Database(xbob.db.verification.utils.SQLiteDatabase):
       for probe in query:
         retval.append(probe)
 
-    return retval
+    return self.uniquify(retval)
 
 
   def pairs(self, protocol=None, groups=None, classes=None, subworld='sevenfolds'):
