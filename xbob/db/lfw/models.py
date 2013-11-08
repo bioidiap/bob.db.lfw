@@ -42,6 +42,11 @@ class Client(Base):
   def __init__(self, name):
     self.id = name
 
+  def __lt__(self, other):
+    """This function defines the order on the Client objects.
+    Client objects are always ordered by their ID, in ascending order."""
+    return self.id < other.id
+
   def __repr__(self):
     return "<Client('%s')>" % self.id
 
