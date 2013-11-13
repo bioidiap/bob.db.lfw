@@ -38,9 +38,9 @@ class Database(xbob.db.verification.utils.SQLiteDatabase):
   and for the data itself inside the database.
   """
 
-  def __init__(self, annotation_type = None):
+  def __init__(self, original_directory = None, original_extension = '.jpg', annotation_type = None):
     # call base class constructor
-    xbob.db.verification.utils.SQLiteDatabase.__init__(self, SQLITE_FILE, File)
+    xbob.db.verification.utils.SQLiteDatabase.__init__(self, SQLITE_FILE, File, original_directory=original_directory, original_extension=original_extension)
 
     self.m_valid_protocols = ('view1', 'fold1', 'fold2', 'fold3', 'fold4', 'fold5', 'fold6', 'fold7', 'fold8', 'fold9', 'fold10')
     self.m_valid_groups = ('world', 'dev', 'eval')

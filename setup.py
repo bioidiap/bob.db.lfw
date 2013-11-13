@@ -10,7 +10,7 @@ from setuptools import setup, find_packages
 setup(
 
     name='xbob.db.lfw',
-    version='1.1.3a0',
+    version='1.2.1a0',
     description='Labeled Faces in the Wild Database Access API for Bob',
     url='http://github.com/bioidiap/xbob.db.lfw',
     license='GPLv3',
@@ -27,7 +27,7 @@ setup(
       'setuptools',
       'six',  # py2/3 compatibility library
       'bob',  # base signal proc./machine learning library
-      'xbob.db.verification.utils>=0.1.4' # defines a set of utilities for face verification databases like this one.
+      'xbob.db.verification.utils>=1.0.0' # defines a set of utilities for face verification databases like this one.
     ],
 
     namespace_packages = [
