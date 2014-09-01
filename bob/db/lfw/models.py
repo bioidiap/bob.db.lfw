@@ -22,14 +22,13 @@
 
 import sqlalchemy
 from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, or_, and_, not_
-from bob.db.sqlalchemy_migration import Enum, relationship
+from bob.db.base.sqlalchemy_migration import Enum, relationship
 from sqlalchemy.orm import backref
 from sqlalchemy.ext.declarative import declarative_base
 
-import xbob.db.verification.utils
+import bob.db.verification.utils
 
 import os
-import bob
 
 Base = declarative_base()
 
@@ -110,7 +109,7 @@ class Annotation(Base):
 def filename(client_id, shot_id):
   return client_id + "_" + "0"*(4-len(str(shot_id))) + str(shot_id)
 
-class File(Base, xbob.db.verification.utils.File):
+class File(Base, bob.db.verification.utils.File):
   """Information about the files of the LFW database."""
   __tablename__ = 'file'
 
@@ -133,7 +132,7 @@ class File(Base, xbob.db.verification.utils.File):
   def __init__(self, client_id, shot_id):
     # call base class constructor
     fn = filename(client_id, shot_id)
-    xbob.db.verification.utils.File.__init__(self, client_id = client_id, path = os.path.join(client_id, fn))
+    bob.db.verification.utils.File.__init__(self, client_id = client_id, path = os.path.join(client_id, fn))
 
     self.shot_id = shot_id
     self.name = fn

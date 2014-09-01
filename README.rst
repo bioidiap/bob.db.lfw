@@ -2,7 +2,7 @@
  Labeled Faces in the Wild Database
 ====================================
 
-This package contains the access API and descriptions for the `Labeled Faces in the 
+This package contains the access API and descriptions for the `Labeled Faces in the
 Wild Database <http://vis-www.cs.umass.edu/lfw/>`_. The actual raw data for
 the database should be downloaded from the original URL. This package only
 contains the `Bob <http://www.idiap.ch/software/bob/>`_ accessor methods to use
@@ -27,7 +27,7 @@ The package is available in two different distribution formats:
 1. You can download it from `PyPI <http://pypi.python.org/pypi>`_, or
 
 2. You can download it in its source form from `its git repository
-   <https://github.com/bioidiap/xbob.db.lfw>`_. When you download the
+   <https://github.com/bioidiap/bob.db.lfw>`_. When you download the
    version at the git repository, you will need to run a command to recreate
    the backend SQLite file required for its operation. This means that the
    database raw files must be installed somewhere in this case. With option
@@ -47,11 +47,11 @@ script)::
 
     install_requires=[
       ...
-      "xbob.db.lfw",
+      "bob.db.lfw",
     ],
 
 Proceed normally with your ``boostrap/buildout`` steps and you should be all
-set. That means you can now import the ``xbob.db.lfw`` namespace into your scripts.
+set. That means you can now import the ``bob.db.lfw`` namespace into your scripts.
 
 Modify your buildout.cfg and download from git
 ==============================================
@@ -67,8 +67,8 @@ lines::
   auto-checkout = *
   eggs = bob
          ...
-         xbob.db.lfw
+         bob.db.lfw
 
   [sources]
-  xbob.db.lfw = git https://github.com/bioidiap/xbob.db.lfw.git
+  bob.db.lfw = git https://github.com/bioidiap/bob.db.lfw.git
   ...

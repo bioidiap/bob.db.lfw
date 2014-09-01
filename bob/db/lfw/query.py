@@ -22,16 +22,16 @@ LFW database.
 """
 
 import six
-from bob.db import utils
+from bob.db.base import utils
 from .models import *
 from sqlalchemy.orm import aliased
 from .driver import Interface
 
-import xbob.db.verification.utils
+import bob.db.verification.utils
 
 SQLITE_FILE = Interface().files()[0]
 
-class Database(xbob.db.verification.utils.SQLiteDatabase):
+class Database(bob.db.verification.utils.SQLiteDatabase):
   """The dataset class opens and maintains a connection opened to the Database.
 
   It provides many different ways to probe for the characteristics of the data
@@ -40,7 +40,7 @@ class Database(xbob.db.verification.utils.SQLiteDatabase):
 
   def __init__(self, original_directory = None, original_extension = '.jpg', annotation_type = None):
     # call base class constructor
-    xbob.db.verification.utils.SQLiteDatabase.__init__(self, SQLITE_FILE, File, original_directory=original_directory, original_extension=original_extension)
+    bob.db.verification.utils.SQLiteDatabase.__init__(self, SQLITE_FILE, File, original_directory=original_directory, original_extension=original_extension)
 
     self.m_valid_protocols = ('view1', 'fold1', 'fold2', 'fold3', 'fold4', 'fold5', 'fold6', 'fold7', 'fold8', 'fold9', 'fold10')
     self.m_valid_groups = ('world', 'dev', 'eval')
@@ -263,7 +263,7 @@ class Database(xbob.db.verification.utils.SQLiteDatabase):
     return [file.id for file in self.models(protocol,groups)]
 
 
-  def get_client_id_from_file_id(self, file_id):
+  def get_client_id_from_file_id(self, file_id, **kwargs):
     """Returns the client_id (real client id) attached to the given file_id
 
     Keyword Parameters:
@@ -282,7 +282,7 @@ class Database(xbob.db.verification.utils.SQLiteDatabase):
     return q.first().client_id
 
 
-  def get_client_id_from_model_id(self, model_id):
+  def get_client_id_from_model_id(self, model_id, **kwargs):
     """Returns the client_id (real client id) attached to the given model id
 
     Keyword Parameters:
