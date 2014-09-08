@@ -54,7 +54,7 @@ If you want to stick to the original protocol and use only the pairs for trainin
 
 The database comes with automatically detected annotations of several landmarks, which are provided by:
 http://lear.inrialpes.fr/people/guillaumin/data.php.
-To be consistent with our other image databases, we added the eye center coordinates ``'leye'`` and ``'reye'`` automatically by averaging between the eye corners of the accorsing eyes.
+To be consistent with our other image databases, we added the eye center coordinates ``'leye'`` and ``'reye'`` automatically by averaging between the eye corners of the according eyes.
 
 .. warning::
   The annotations are provided for the ``funneled`` images (**not the deep funneled ones**), which can be downloaded from http://vis-www.cs.umass.edu/lfw as well.

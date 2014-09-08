@@ -45,7 +45,7 @@ class Database(bob.db.verification.utils.SQLiteDatabase):
     self.m_valid_protocols = ('view1', 'fold1', 'fold2', 'fold3', 'fold4', 'fold5', 'fold6', 'fold7', 'fold8', 'fold9', 'fold10')
     self.m_valid_groups = ('world', 'dev', 'eval')
     self.m_valid_purposes = ('enrol', 'probe')
-    self.m_valid_classes = ('client', 'impostor') # 'matched' and 'unmatched'
+    self.m_valid_classes = ('matched', 'client', 'unmatched', 'impostor')
     self.m_subworld_counts = {'onefolds':1, 'twofolds':2, 'threefolds':3, 'fourfolds':4, 'fivefolds':5, 'sixfolds':6, 'sevenfolds':7}
     self.m_valid_types = ('restricted', 'unrestricted')
 
@@ -444,7 +444,7 @@ class Database(bob.db.verification.utils.SQLiteDatabase):
       The groups to which the objects belong ('world', 'dev', 'eval')
 
     classes
-      The classes to which the pairs belong ('matched', 'unmatched')
+      The classes to which the pairs belong ('matched', 'unmatched'), or ('client', 'impostor')
 
     subworld
       The subset of the training data. Has to be specified if groups includes 'world'
@@ -487,9 +487,9 @@ class Database(bob.db.verification.utils.SQLiteDatabase):
 
     retval = []
     for query in queries:
-      if not 'client' in classes:
+      if 'matched' not in classes and 'client' not in classes:
         query = query.filter(Pair.is_match == False)
-      if not 'impostor' in classes:
+      if 'unmatched' not in classes and 'impostor' not in classes:
         query = query.filter(Pair.is_match == True)
 
       for pair in query:

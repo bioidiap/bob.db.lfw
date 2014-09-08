@@ -107,7 +107,7 @@ def annotations(args):
   """Returns a list of file database identifiers given the path stems"""
 
   from .query import Database
-  db = Database(args.annotation_type)
+  db = Database(annotation_type=args.annotation_type)
 
   output = sys.stdout
   if args.selftest:
