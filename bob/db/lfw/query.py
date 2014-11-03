@@ -44,7 +44,7 @@ class Database(bob.db.verification.utils.SQLiteDatabase):
 
     self.m_valid_protocols = ('view1', 'fold1', 'fold2', 'fold3', 'fold4', 'fold5', 'fold6', 'fold7', 'fold8', 'fold9', 'fold10')
     self.m_valid_groups = ('world', 'dev', 'eval')
-    self.m_valid_purposes = ('enrol', 'probe')
+    self.m_valid_purposes = ('enroll', 'probe')
     self.m_valid_classes = ('matched', 'client', 'unmatched', 'impostor')
     self.m_subworld_counts = {'onefolds':1, 'twofolds':2, 'threefolds':3, 'fourfolds':4, 'fivefolds':5, 'sixfolds':6, 'sevenfolds':7}
     self.m_valid_types = ('restricted', 'unrestricted')
@@ -146,7 +146,7 @@ class Database(bob.db.verification.utils.SQLiteDatabase):
         if 'world' in groups:
           if world_type == 'restricted':
             queries.append(\
-                self.query(Client).join(File).join((Pair, or_(File.id == Pair.enrol_file_id, File.id == Pair.probe_file_id))).\
+                self.query(Client).join(File).join((Pair, or_(File.id == Pair.enroll_file_id, File.id == Pair.probe_file_id))).\
                     filter(Pair.protocol == 'train').\
                     order_by(Client.id))
           else:
@@ -165,7 +165,7 @@ class Database(bob.db.verification.utils.SQLiteDatabase):
           trainset = self.__world_for__(protocol, subworld)
           if world_type == 'restricted':
             queries.append(\
-                self.query(Client).join(File).join((Pair, or_(File.id == Pair.enrol_file_id, File.id == Pair.probe_file_id))).\
+                self.query(Client).join(File).join((Pair, or_(File.id == Pair.enroll_file_id, File.id == Pair.probe_file_id))).\
                     filter(Pair.protocol.in_(trainset)).\
                     order_by(Client.id))
           else:
@@ -223,18 +223,18 @@ class Database(bob.db.verification.utils.SQLiteDatabase):
         if 'dev' in groups:
           queries.append(\
               # enroll files
-              self.query(File).join((Pair, File.id == Pair.enrol_file_id)).\
+              self.query(File).join((Pair, File.id == Pair.enroll_file_id)).\
                     filter(Pair.protocol == 'test'))
       else:
         if 'dev' in groups:
           # select development set for the given fold
           devset = self.__dev_for__(protocol)
           queries.append(\
-              self.query(File).join((Pair, File.id == Pair.enrol_file_id)).\
+              self.query(File).join((Pair, File.id == Pair.enroll_file_id)).\
                     filter(Pair.protocol.in_(devset)))
         if 'eval' in groups:
           queries.append(\
-              self.query(File).join((Pair, File.id == Pair.enrol_file_id)).\
+              self.query(File).join((Pair, File.id == Pair.enroll_file_id)).\
                     filter(Pair.protocol == protocol))
 
     # all queries are made; now collect the files
@@ -314,7 +314,7 @@ class Database(bob.db.verification.utils.SQLiteDatabase):
       The groups to which the objects belong ('world', 'dev', 'eval')
 
     purposes
-      The purposes of the objects ('enrol', 'probe')
+      The purposes of the objects ('enroll', 'probe')
 
     subworld
       The subset of the training data. Has to be specified if groups includes 'world'
@@ -355,7 +355,7 @@ class Database(bob.db.verification.utils.SQLiteDatabase):
           # training files of view1
           if world_type == 'restricted':
             queries.append(\
-                self.query(File).join((Pair, or_(File.id == Pair.enrol_file_id, File.id == Pair.probe_file_id))).\
+                self.query(File).join((Pair, or_(File.id == Pair.enroll_file_id, File.id == Pair.probe_file_id))).\
                     filter(Pair.protocol == 'train'))
           else:
             queries.append(\
@@ -363,15 +363,15 @@ class Database(bob.db.verification.utils.SQLiteDatabase):
                     filter(People.protocol == 'train'))
         if 'dev' in groups:
           # test files of view1
-          if 'enrol' in purposes:
+          if 'enroll' in purposes:
             queries.append(\
-                self.query(File).join((Pair, File.id == Pair.enrol_file_id)).\
+                self.query(File).join((Pair, File.id == Pair.enroll_file_id)).\
                     filter(Pair.protocol == 'test'))
           if 'probe' in purposes:
             probe_queries.append(\
                 self.query(File).\
                     join((Pair, File.id == Pair.probe_file_id)).\
-                    join((file_alias, Pair.enrol_file_id == file_alias.id)).\
+                    join((file_alias, Pair.enroll_file_id == file_alias.id)).\
                     filter(Pair.protocol == 'test'))
 
       else:
@@ -381,7 +381,7 @@ class Database(bob.db.verification.utils.SQLiteDatabase):
           trainset = self.__world_for__(protocol, subworld)
           if world_type == 'restricted':
             queries.append(\
-                self.query(File).join((Pair, or_(File.id == Pair.enrol_file_id, File.id == Pair.probe_file_id))).\
+                self.query(File).join((Pair, or_(File.id == Pair.enroll_file_id, File.id == Pair.probe_file_id))).\
                     filter(Pair.protocol.in_(trainset)))
           else:
             queries.append(\
@@ -391,28 +391,28 @@ class Database(bob.db.verification.utils.SQLiteDatabase):
         if 'dev' in groups:
           # development set of current fold of view 2
           devset = self.__dev_for__(protocol)
-          if 'enrol' in purposes:
+          if 'enroll' in purposes:
             queries.append(\
-                self.query(File).join((Pair, File.id == Pair.enrol_file_id)).\
+                self.query(File).join((Pair, File.id == Pair.enroll_file_id)).\
                     filter(Pair.protocol.in_(devset)))
           if 'probe' in purposes:
             probe_queries.append(\
                 self.query(File).\
                     join((Pair, File.id == Pair.probe_file_id)).\
-                    join((file_alias, file_alias.id == Pair.enrol_file_id)).\
+                    join((file_alias, file_alias.id == Pair.enroll_file_id)).\
                     filter(Pair.protocol.in_(devset)))
 
         if 'eval' in groups:
           # evaluation set of current fold of view 2; this is the REAL fold
-          if 'enrol' in purposes:
+          if 'enroll' in purposes:
             queries.append(\
-                self.query(File).join((Pair, File.id == Pair.enrol_file_id)).\
+                self.query(File).join((Pair, File.id == Pair.enroll_file_id)).\
                     filter(Pair.protocol == protocol))
           if 'probe' in purposes:
             probe_queries.append(\
                 self.query(File).\
                     join((Pair, File.id == Pair.probe_file_id)).\
-                    join((file_alias, file_alias.id == Pair.enrol_file_id)).\
+                    join((file_alias, file_alias.id == Pair.enroll_file_id)).\
                     filter(Pair.protocol == protocol))
 
     retval = []
@@ -456,7 +456,7 @@ class Database(bob.db.verification.utils.SQLiteDatabase):
 
     def default_query():
       return self.query(Pair).\
-                join((File1, File1.id == Pair.enrol_file_id)).\
+                join((File1, File1.id == Pair.enroll_file_id)).\
                 join((File2, File2.id == Pair.probe_file_id))
 
     protocol = self.check_parameter_for_validity(protocol, "protocol", self.m_valid_protocols)

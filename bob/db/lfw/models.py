@@ -162,18 +162,18 @@ class Pair(Base):
   id = Column(Integer, primary_key=True)
   # train and test for view1, the folds for view2
   protocol = Column(Enum('train', 'test', 'fold1', 'fold2', 'fold3', 'fold4', 'fold5', 'fold6', 'fold7', 'fold8', 'fold9', 'fold10'))
-  enrol_file_id = Column(String(100), ForeignKey('file.id'))
+  enroll_file_id = Column(String(100), ForeignKey('file.id'))
   probe_file_id = Column(String(100), ForeignKey('file.id'))
-  enrol_file = relationship("File", backref=backref("enrol_files", order_by=id), primaryjoin="Pair.enrol_file_id==File.id")
+  enroll_file = relationship("File", backref=backref("enroll_files", order_by=id), primaryjoin="Pair.enroll_file_id==File.id")
   probe_file = relationship("File", backref=backref("probe_files", order_by=id), primaryjoin="Pair.probe_file_id==File.id")
   is_match = Column(Boolean)
 
-  def __init__(self, protocol, enrol_file_id, probe_file_id, is_match):
+  def __init__(self, protocol, enroll_file_id, probe_file_id, is_match):
     self.protocol = protocol
-    self.enrol_file_id = enrol_file_id
+    self.enroll_file_id = enroll_file_id
     self.probe_file_id = probe_file_id
     self.is_match = is_match
 
   def __repr__(self):
-    return "<Pair('%s', '%s', '%s', '%d')>" % (self.protocol, self.enrol_file_id, self.probe_file_id, 1 if self.is_match else 0)
+    return "<Pair('%s', '%s', '%s', '%d')>" % (self.protocol, self.enroll_file_id, self.probe_file_id, 1 if self.is_match else 0)
 

@@ -142,8 +142,8 @@ def test_objects():
 
   # check that the files() function returns the same number of elements as the models() function does
   for p,l in expected_models.items():
-    assert len(db.objects(protocol=p, groups='dev', purposes='enrol')) == l[0]
-    assert len(db.objects(protocol=p, groups='eval', purposes='enrol')) == l[1]
+    assert len(db.objects(protocol=p, groups='dev', purposes='enroll')) == l[0]
+    assert len(db.objects(protocol=p, groups='eval', purposes='enroll')) == l[1]
 
   # check the number of probe files is correct
   for p,l in expected_probes.items():
@@ -193,8 +193,8 @@ def test_unrestricted():
   for p,l in expected_unrestricted_training_images.items():
     assert len(db.objects(protocol=p, groups='world', world_type='unrestricted')) == l
     # for dev and eval, restricted and unrestricted should return the same number of files
-    assert len(db.objects(protocol=p, groups='dev', purposes='enrol', world_type='unrestricted')) == expected_models[p][0]
-    assert len(db.objects(protocol=p, groups='eval', purposes='enrol', world_type='unrestricted')) == expected_models[p][1]
+    assert len(db.objects(protocol=p, groups='dev', purposes='enroll', world_type='unrestricted')) == expected_models[p][0]
+    assert len(db.objects(protocol=p, groups='eval', purposes='enroll', world_type='unrestricted')) == expected_models[p][1]
     assert len(db.objects(protocol=p, groups='dev', purposes='probe', world_type='unrestricted')) == expected_probes[p][0]
     assert len(db.objects(protocol=p, groups='eval', purposes='probe', world_type='unrestricted')) == expected_probes[p][1]
 
@@ -221,7 +221,7 @@ def test_annotations():
 def test_driver_api():
   from bob.db.base.script.dbmanage import main
   assert main('lfw dumplist --self-test'.split()) == 0
-  assert main('lfw dumplist --protocol=fold8 --group=dev --purpose=enrol --self-test'.split()) == 0
+  assert main('lfw dumplist --protocol=fold8 --group=dev --purpose=enroll --self-test'.split()) == 0
   assert main('lfw dumppairs --self-test'.split()) == 0
   assert main('lfw dumppairs --protocol=fold8 --group=dev --class=client --self-test'.split()) == 0
   assert main('lfw checkfiles --self-test'.split()) == 0

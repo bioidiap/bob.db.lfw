@@ -67,7 +67,7 @@ def dumppairs(args):
     output = null()
 
   for p in r:
-    output.write('%s -> %s\n' % (p.enrol_file.make_path(args.directory, args.extension), p.probe_file.make_path(args.directory, args.extension)))
+    output.write('%s -> %s\n' % (p.enroll_file.make_path(args.directory, args.extension), p.probe_file.make_path(args.directory, args.extension)))
 
   return 0
 
