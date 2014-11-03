@@ -208,7 +208,7 @@ def test_annotations():
   # iterate over all files
   for annotation_type in db.annotation_types():
     for file in files:
-      annotations = db.annotations(file.id, annotation_type)
+      annotations = db.annotations(file, annotation_type)
       if annotation_type == 'funneled':
         assert 'leye' in annotations and 'reye' in annotations
       if 'leye' in annotations:

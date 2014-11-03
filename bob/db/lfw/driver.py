@@ -114,7 +114,11 @@ def annotations(args):
     from bob.db.base.utils import null
     output = null()
 
-  a = db.annotations(args.id)
+  f = db.files([args.id])
+  if len(f) != 1:
+    output.write('Cannot find file with id "%d" in database\n' % args.id)
+    return 1
+  a = db.annotations(f[0])
   for f in a: output.write('%s : (%3.2f, %3.2f)\n' % (f, a[f][0], a[f][1]))
 
   if not a: return 1

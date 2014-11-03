@@ -497,13 +497,13 @@ class Database(bob.db.verification.utils.SQLiteDatabase):
 
     return retval
 
-  def annotations(self, file_id, annotation_type=None):
+  def annotations(self, file, annotation_type=None):
     """Returns the annotations for the given file id as a dictionary, e.g. {'reye':(y,x), 'leye':(y,x)}.
 
     Keyword parameters:
 
     file_id
-      The id of the file for which you want to retrieve the annotations
+      The ``File`` object for which you want to retrieve the annotations
 
     annotation_type
       The type of annotations ('idiap', 'funneled').
@@ -515,7 +515,7 @@ class Database(bob.db.verification.utils.SQLiteDatabase):
 
     annotation_type = self.check_parameters_for_validity(annotation_type, "annotation type", self.m_valid_annotation_types)
 
-    query = self.query(Annotation).filter(Annotation.annotation_type.in_(annotation_type)).join(File).filter(File.id==file_id)
+    query = self.query(Annotation).filter(Annotation.annotation_type.in_(annotation_type)).join(File).filter(File.id==file.id)
     assert query.count() == 1
     annotation = query.first()
 
