@@ -2,9 +2,11 @@
 .. @author: Manuel Guenther <Manuel.Guenther@idiap.ch>
 .. @date:   Mon Sep  1 12:41:53 CEST 2014
 
-==========================================================
-Labeled Faces in the Wild Database Verification Protocols
-==========================================================
+.. _bob.db.lfw:
+
+===========================================================
+ Labeled Faces in the Wild Database Verification Protocols
+===========================================================
 
 .. todolist::
 
