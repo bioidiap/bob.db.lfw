@@ -7,7 +7,7 @@
    :target: http://pythonhosted.org/bob.db.lfw/index.html
 .. image:: http://img.shields.io/badge/docs-latest-orange.png
    :target: https://www.idiap.ch/software/bob/docs/latest/bioidiap/bob.db.lfw/master/index.html
-.. image:: https://travis-ci.org/bioidiap/bob.db.lfw.svg?branch=v2.0.1
+.. image:: https://travis-ci.org/bioidiap/bob.db.lfw.svg?branch=master
    :target: https://travis-ci.org/bioidiap/bob.db.lfw
 .. image:: https://coveralls.io/repos/bioidiap/bob.db.lfw/badge.png
    :target: https://coveralls.io/r/bioidiap/bob.db.lfw
