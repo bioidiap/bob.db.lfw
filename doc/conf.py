@@ -131,7 +131,7 @@ pygments_style = 'sphinx'
 
 # Some variables which are useful for generated material
 project_variable = project.replace('.', '_')
-short_description = u'LFW Database API'
+short_description = u'Labeled Faces in the Wild Database Access API for Bob'
 owner = [u'Idiap Research Institute']
 
 
