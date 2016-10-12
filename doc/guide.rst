@@ -13,7 +13,7 @@ The actual raw data for the database should be downloaded from the original URL 
 The Database Interface
 ----------------------
 
-The :py:class:`bob.db.lfw.Database` complies with the standard biometric verification database as described in `bob.db.base <bob.db.base>`, implementing the interface :py:class:`bob.db.base.SQLiteDatabase`.
+The :py:class:`bob.db.lfw.Database` complies with the standard biometric verification database as described in `bob.db.base <bob.db.base>`_, implementing the interface :py:class:`bob.db.base.SQLiteDatabase`.
 
 
 Particularities of the LFW Database
