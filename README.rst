@@ -1,17 +1,17 @@
 .. vim: set fileencoding=utf-8 :
 .. Wed 17 Aug 09:03:52 CEST 2016
 
-.. image:: http://img.shields.io/badge/docs-stable-yellow.png
+.. image:: http://img.shields.io/badge/docs-stable-yellow.svg
    :target: http://pythonhosted.org/bob.db.lfw/index.html
-.. image:: http://img.shields.io/badge/docs-latest-orange.png
+.. image:: http://img.shields.io/badge/docs-latest-orange.svg
    :target: https://www.idiap.ch/software/bob/docs/latest/bob/bob.db.lfw/master/index.html
 .. image:: https://gitlab.idiap.ch/bob/bob.db.lfw/badges/master/build.svg
    :target: https://gitlab.idiap.ch/bob/bob.db.lfw/commits/master
 .. image:: https://img.shields.io/badge/gitlab-project-0000c0.svg
    :target: https://gitlab.idiap.ch/bob/bob.db.lfw
-.. image:: http://img.shields.io/pypi/v/bob.db.lfw.png
+.. image:: http://img.shields.io/pypi/v/bob.db.lfw.svg
    :target: https://pypi.python.org/pypi/bob.db.lfw
-.. image:: http://img.shields.io/pypi/dm/bob.db.lfw.png
+.. image:: http://img.shields.io/pypi/dm/bob.db.lfw.svg
    :target: https://pypi.python.org/pypi/bob.db.lfw
 .. image:: https://img.shields.io/badge/original-data--files-a000a0.png
    :target: http://vis-www.cs.umass.edu/lfw
@@ -44,5 +44,5 @@ development `mailing list`_.
 
 .. Place your references here:
 .. _bob: https://www.idiap.ch/software/bob
-.. _installation: https://gitlab.idiap.ch/bob/bob/wikis/Installation
+.. _installation: https://www.idiap.ch/software/bob/install
 .. _mailing list: https://groups.google.com/forum/?fromgroups#!forum/bob-devel
