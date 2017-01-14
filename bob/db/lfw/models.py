@@ -131,7 +131,8 @@ class File(Base, bob.db.base.File):
   def __init__(self, client_id, shot_id):
     # call base class constructor
     fn = filename(client_id, shot_id)
-    bob.db.base.File.__init__(self, client_id = client_id, path = os.path.join(client_id, fn))
+    bob.db.base.File.__init__(self, path = os.path.join(client_id, fn))
+    self.client_id = client_id
 
     self.shot_id = shot_id
     self.name = fn
