@@ -1,20 +1,14 @@
 .. vim: set fileencoding=utf-8 :
 .. Wed 17 Aug 09:03:52 CEST 2016
 
-.. image:: http://img.shields.io/badge/docs-stable-yellow.svg
-   :target: https://www.idiap.ch/software/bob/docs/bob/bob.db.lfw/stable/index.html
-.. image:: http://img.shields.io/badge/docs-latest-orange.svg
+.. image:: https://img.shields.io/badge/docs-available-orage.svg
    :target: https://www.idiap.ch/software/bob/docs/bob/bob.db.lfw/master/index.html
-.. image:: https://gitlab.idiap.ch/bob/bob.db.lfw/badges/master/build.svg
+.. image:: https://gitlab.idiap.ch/bob/bob.db.lfw/badges/master/pipeline.svg
    :target: https://gitlab.idiap.ch/bob/bob.db.lfw/commits/master
 .. image:: https://gitlab.idiap.ch/bob/bob.db.lfw/badges/master/coverage.svg
    :target: https://gitlab.idiap.ch/bob/bob.db.lfw/commits/master
 .. image:: https://img.shields.io/badge/gitlab-project-0000c0.svg
    :target: https://gitlab.idiap.ch/bob/bob.db.lfw
-.. image:: http://img.shields.io/pypi/v/bob.db.lfw.svg
-   :target: https://pypi.python.org/pypi/bob.db.lfw
-.. image:: https://img.shields.io/badge/original-data--files-a000a0.png
-   :target: http://vis-www.cs.umass.edu/lfw
 
 =====================================================
  Labeled Faces in the Wild Database Interface for Bob
