@@ -44,7 +44,7 @@ class Database(bob.db.base.SQLiteDatabase):
     super(Database, self).__init__(SQLITE_FILE, File,
                                    original_directory, original_extension)
 
-    self.m_valid_protocols = ('view1', 'fold1', 'fold2', 'fold3',
+    self.m_valid_protocols = ('view1', 'view2', 'fold1', 'fold2', 'fold3',
                               'fold4', 'fold5', 'fold6', 'fold7', 'fold8', 'fold9', 'fold10')
     self.m_valid_groups = ('world', 'dev', 'eval')
     self.m_valid_purposes = ('enroll', 'probe')
@@ -166,6 +166,12 @@ class Database(bob.db.base.SQLiteDatabase):
               self.query(Client).join(File).join(People).
               filter(People.protocol == 'test').
               order_by(Client.id))
+      elif protocol == 'view2':
+        if 'dev' in groups:
+          queries.append(
+              self.query(Client).join(File).join(People).
+              filter(People.protocol == protocol).
+              order_by(Client.id))
       else:
         if 'world' in groups:
           # select training set for the given fold
@@ -233,6 +239,12 @@ class Database(bob.db.base.SQLiteDatabase):
               # enroll files
               self.query(File).join((Pair, File.id == Pair.enroll_file_id)).\
               filter(Pair.protocol == 'test'))
+      elif protocol == 'view2':
+        if 'dev' in groups:
+          queries.append(
+              # enroll files
+              self.query(File).join((Pair, File.id == Pair.enroll_file_id)).\
+              filter(Pair.protocol == protocol))
       else:
         if 'dev' in groups:
           # select development set for the given fold
@@ -383,8 +395,23 @@ class Database(bob.db.base.SQLiteDatabase):
                 join((file_alias, Pair.enroll_file_id == file_alias.id)).
                 filter(Pair.protocol == 'test'))
 
+      elif protocol == 'view2':
+        # view 2 -- dev-only protocol
+        if 'dev' in groups:
+          # development set of current fold of view 2
+          if 'enroll' in purposes:
+            queries.append(
+                self.query(File).join((Pair, File.id == Pair.enroll_file_id)).
+                filter(Pair.protocol == protocol))
+          if 'probe' in purposes:
+            probe_queries.append(
+                self.query(File).
+                join((Pair, File.id == Pair.probe_file_id)).
+                join((file_alias, file_alias.id == Pair.enroll_file_id)).
+                filter(Pair.protocol == protocol))
+
       else:
-        # view 2
+        # view 2 splits
         if 'world' in groups:
           # world set of current fold of view 2
           trainset = self.__world_for__(protocol, subworld)
@@ -486,6 +513,10 @@ class Database(bob.db.base.SQLiteDatabase):
         queries.append(default_query().filter(Pair.protocol == 'train'))
       if 'dev' in groups:
         queries.append(default_query().filter(Pair.protocol == 'test'))
+
+    elif protocol == 'view2':
+      if 'dev' in groups:
+        queries.append(default_query().filter(Pair.protocol == protocol))
 
     else:
       if 'world' in groups:

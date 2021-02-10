@@ -144,7 +144,7 @@ class People(Base):
   __tablename__ = 'people'
 
   id = Column(Integer, primary_key=True)
-  protocol = Column(Enum('train', 'test', 'fold1', 'fold2', 'fold3', 'fold4', 'fold5', 'fold6', 'fold7', 'fold8', 'fold9', 'fold10'))
+  protocol = Column(Enum('train', 'test', 'fold1', 'fold2', 'fold3', 'fold4', 'fold5', 'fold6', 'fold7', 'fold8', 'fold9', 'fold10', 'view2'))
   file_id = Column(String(100), ForeignKey('file.id'))
 
   def __init__(self, protocol, file_id):
@@ -161,7 +161,7 @@ class Pair(Base):
 
   id = Column(Integer, primary_key=True)
   # train and test for view1, the folds for view2
-  protocol = Column(Enum('train', 'test', 'fold1', 'fold2', 'fold3', 'fold4', 'fold5', 'fold6', 'fold7', 'fold8', 'fold9', 'fold10'))
+  protocol = Column(Enum('train', 'test', 'fold1', 'fold2', 'fold3', 'fold4', 'fold5', 'fold6', 'fold7', 'fold8', 'fold9', 'fold10', 'view2'))
   enroll_file_id = Column(String(100), ForeignKey('file.id'))
   probe_file_id = Column(String(100), ForeignKey('file.id'))
   enroll_file = relationship("File", backref=backref("enroll_files", order_by=id), primaryjoin="Pair.enroll_file_id==File.id")
@@ -176,4 +176,3 @@ class Pair(Base):
 
   def __repr__(self):
     return "<Pair('%s', '%s', '%s', '%d')>" % (self.protocol, self.enroll_file_id, self.probe_file_id, 1 if self.is_match else 0)
-
