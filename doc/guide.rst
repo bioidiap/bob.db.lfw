@@ -31,6 +31,12 @@ To limit the ``'world'`` set further, use one of the available ``subworld`` keyw
 
 To compute recognition results, please execute experiments on all 10 protocols (``protocol='fold1'`` ... ``protocol='fold10'``) and average the resulting classification results (cf. http://vis-www.cs.umass.edu/lfw for details on scoring).
 
+.. note::
+  Modern deep learning methods do not require to use the training set of the dataset.
+  For this purpose, we have added a ``'view2'`` protocol that combines the ten different folds of the second view into the ``'dev'`` group of the protocol ``'view2'``.
+  This allows to run only a single experiment.
+  Please be aware that both the ``'world'`` as well as the ``'eval'`` set of protocol ``'view2'`` are empty.
+
 The design of this implementation differs slightly compared to the one from http://vis-www.cs.umass.edu/lfw.
 Originally, only lists of image pairs are provided by the creators of the LFW database.
 To be consistent with other verification databases in Bob, here the lists are split up into files to be enrolled, and probe files.

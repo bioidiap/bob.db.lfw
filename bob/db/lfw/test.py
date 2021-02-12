@@ -54,7 +54,8 @@ expected_clients = {
     'fold7': (4058, 2997, 1094, 597),
     'fold8': (4024, 2976, 1124, 601),
     'fold9': (3971, 2956, 1198, 580),
-    'fold10': (3959, 2948, 1181, 609)
+    'fold10': (3959, 2948, 1181, 609),
+    'view2': (0, 0, 5749, 0)
   }
 
 expected_models = {
@@ -68,7 +69,8 @@ expected_models = {
     'fold7': (877, 476),
     'fold8': (917, 462),
     'fold9': (938, 458),
-    'fold10': (920, 458)
+    'fold10': (920, 458),
+    'view2': (4564, 0)
   }
 
 expected_probes = {
@@ -82,7 +84,8 @@ expected_probes = {
     'fold7': (899, 467),
     'fold8': (917, 462),
     'fold9': (929, 457),
-    'fold10': (919, 474)
+    'fold10': (919, 474),
+    'view2': (4576, 0)
   }
 
 expected_restricted_training_images = {
@@ -96,7 +99,8 @@ expected_restricted_training_images = {
     'fold7': 2334,
     'fold8': 2356,
     'fold9': 2368,
-    'fold10': 2320
+    'fold10': 2320,
+    'view2': 0
   }
 
 expected_unrestricted_training_images = {
@@ -110,7 +114,8 @@ expected_unrestricted_training_images = {
     'fold7': 9361,
     'fold8': 9155,
     'fold9': 9114,
-    'fold10': 9021
+    'fold10': 9021,
+    'view2': 0
   }
 
 
@@ -175,14 +180,14 @@ def test_pairs():
   # Tests if the pairs() function returns the desired output
   db = bob.db.lfw.Database()
   # check the number of pairs
-  numbers = ((2200, 1000, 0), (4200, 1200, 600))
-  index = 10
-  for p in sorted(expected_models.keys()):
-    assert len(db.pairs(protocol=p, groups='world')) == numbers[index > 0][0]
-    assert len(db.pairs(protocol=p, groups='dev')) == numbers[index > 0][1]
-    assert len(db.pairs(protocol=p, groups='eval')) == numbers[index > 0][2]
-    # evil trick to get the first 10 times the numbers for view2, and once the numbers for view1
-    index -= 1
+  def numbers(protocol):
+    if protocol == "view1": return (2200, 1000, 0)
+    if protocol == "view2": return (0, 6000, 0)
+    return (4200, 1200, 600)
+  for p in expected_models.keys():
+    assert len(db.pairs(protocol=p, groups='world')) == numbers(p)[0]
+    assert len(db.pairs(protocol=p, groups='dev')) == numbers(p)[1]
+    assert len(db.pairs(protocol=p, groups='eval')) == numbers(p)[2]
 
 
 @db_available
@@ -228,4 +233,3 @@ def test_driver_api():
   assert main('lfw reverse Thomas_Watjen/Thomas_Watjen_0001 --self-test'.split()) == 0
   assert main('lfw annotations 1437 --self-test'.split()) == 0
   assert main('lfw path 1437 --self-test'.split()) == 0
-
